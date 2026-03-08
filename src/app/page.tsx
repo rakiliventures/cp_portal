@@ -33,7 +33,7 @@ export default function LandingPage() {
       <main>
         <WelcomeHero />
 
-        <div className="mx-auto max-w-6xl px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 md:pt-10 md:pb-20">
+        <div className="mx-auto max-w-6xl px-4 pt-2 pb-12 sm:px-6 sm:pt-4 sm:pb-16 md:pt-5 md:pb-20">
 
         {/* Featured events — full-width */}
         <section
@@ -41,7 +41,7 @@ export default function LandingPage() {
           aria-labelledby="upcoming-events-heading"
         >
           <div className="absolute inset-0 bg-gradient-to-b from-slate-50 via-white to-primary/[0.03]" aria-hidden />
-          <div className="relative mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:py-10">
+          <div className="relative mx-auto max-w-6xl px-4 pt-4 pb-6 sm:px-6 sm:pt-5 sm:pb-8 md:px-8 md:pt-6 md:pb-10">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-10">
               <div className="min-w-0">
                 <h2 id="upcoming-events-heading" className="mb-4 flex items-center gap-2 sm:mb-5">
@@ -99,7 +99,10 @@ export default function LandingPage() {
               <div className="min-w-0">
                 <h3 className="mb-1 text-base font-bold text-primary sm:text-lg">Who We Are</h3>
                 <p className="text-sm leading-snug text-slate-700">
-                  The Catholic Professionals of OLQP South B (CP) is a dynamic community of young Catholic professionals who believe in serving God through excellence in our careers. We embody &quot;Ora Et Labora&quot; (Prayer and Work), creating a space where faith meets professional ambition.
+                  The Catholic Professionals (CP) of the Our Lady Queen of Peace South B Parish is a lay association of Christ&apos;s faithful established to harness the diverse professional talents and resources of its members for the service of God, Church and society. Through active participation in spiritual activities, parish projects, mentorship, and social welfare initiatives, the CP group strives to live out the Catholic social teachings, providing a platform for professionals to integrate their faith into their daily work and contribute meaningfully to the holistic development of the parish.
+                </p>
+                <p className="mt-2 text-sm leading-snug font-medium text-primary">
+                  We embody &quot;Ora Et Labora&quot; (Prayer and Work).
                 </p>
               </div>
             </div>

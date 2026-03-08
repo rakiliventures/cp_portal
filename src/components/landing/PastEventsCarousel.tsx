@@ -83,7 +83,7 @@ export function PastEventsCarousel() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden />
               </div>
-              <div className="flex flex-col gap-4 p-4 sm:p-5">
+              <div className="flex flex-col gap-4 bg-slate-50 p-4 sm:p-5">
                 <div>
                   <time className="text-xs font-semibold uppercase tracking-wider text-primary sm:text-sm">
                     {event.date}

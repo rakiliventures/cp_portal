@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-
 type Slide = { type: "image"; src: string } | { type: "video"; src: string };
 
 // Add more items here; drop images/videos in public/images/bg/
@@ -47,7 +45,7 @@ export function WelcomeHero() {
 
   return (
     <section
-      className="relative flex min-h-[420px] flex-col items-center justify-center overflow-hidden px-4 py-16 sm:min-h-[480px] sm:py-20 md:min-h-[520px] md:py-24"
+      className="relative flex min-h-[500px] flex-col items-center justify-center overflow-hidden px-4 py-16 sm:min-h-[560px] sm:py-20 md:min-h-[620px] md:py-24"
       aria-labelledby="welcome-heading"
     >
       {/* Background slide stack with crossfade */}
@@ -109,17 +107,17 @@ export function WelcomeHero() {
         <span className="mb-6 inline-block h-px w-16 bg-accent-light/80 sm:mb-8" aria-hidden />
         <p className="mb-6 text-base italic tracking-wide text-white/90 sm:mb-8 sm:text-lg">Ora Et Labora</p>
         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-          <Link
-            href="/login"
-            className="inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded-xl bg-primary px-5 py-3 font-semibold tracking-wide text-white shadow-lg shadow-primary/30 transition hover:bg-primary-light hover:shadow-xl hover:shadow-primary/40 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-900/50 active:scale-[0.98]"
-          >
-            Member Login
-          </Link>
           <a
             href="#about-us"
             className="inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded-xl border-2 border-white bg-white/10 px-5 py-3 font-semibold text-white backdrop-blur-sm transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-900/30 active:scale-[0.98]"
           >
             Learn More about CP
+          </a>
+          <a
+            href="#join-us"
+            className="inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded-xl bg-primary px-5 py-3 font-semibold tracking-wide text-white shadow-lg shadow-primary/30 transition hover:bg-primary-light hover:shadow-xl hover:shadow-primary/40 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-900/50 active:scale-[0.98]"
+          >
+            Join Us
           </a>
         </div>
       </div>
