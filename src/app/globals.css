@@ -40,16 +40,16 @@ input, select, textarea {
   }
 }
 
-/* Landing: white background */
+/* Landing: clean background for young-professional feel */
 .landing-bg {
-  background: linear-gradient(180deg, #ffffff 0%, #f8faf8 30%, #f0f5ee 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfa 25%, #f4f6f4 100%);
   position: relative;
 }
 .landing-bg::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(54, 124, 0, 0.06) 0%, transparent 55%);
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(54, 124, 0, 0.04) 0%, transparent 60%);
   pointer-events: none;
 }
 .landing-bg > * {

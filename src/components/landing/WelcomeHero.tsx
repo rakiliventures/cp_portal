@@ -7,7 +7,8 @@ type Slide = { type: "image"; src: string } | { type: "video"; src: string };
 
 // Add more items here; drop images/videos in public/images/bg/
 const SLIDES: Slide[] = [
-  { type: "video", src: "/images/bg/dinner_2025.mov" },
+  { type: "image", src: "/images/bg/cake.jpg" },
+  { type: "image", src: "/images/bg/moderator_2024.JPG" },
 ];
 const INTERVAL_MS = 6000;
 const FADE_DURATION_MS = 2000;
@@ -110,7 +111,7 @@ export function WelcomeHero() {
         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
           <Link
             href="/login"
-            className="inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded-xl bg-accent px-5 py-3 font-semibold text-primary-dark shadow-md transition hover:bg-accent-light hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-slate-900/30 active:scale-[0.98]"
+            className="inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded-xl bg-primary px-5 py-3 font-semibold tracking-wide text-white shadow-lg shadow-primary/30 transition hover:bg-primary-light hover:shadow-xl hover:shadow-primary/40 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-900/50 active:scale-[0.98]"
           >
             Member Login
           </Link>

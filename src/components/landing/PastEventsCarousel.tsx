@@ -71,34 +71,36 @@ export function PastEventsCarousel() {
       >
         {events.map((event) => (
           <div key={event.id} className="min-w-full shrink-0 px-1 sm:px-2">
-            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
-              <div className="relative aspect-[16/10] w-full bg-slate-200 sm:aspect-[2/1]">
+            <article className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-lg shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/20">
+              <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 sm:aspect-[2/1]">
                 <Image
                   src={event.imageUrl}
                   alt={event.title}
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 800px"
                   priority={event.id === events[0].id}
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden />
               </div>
-              <div className="flex flex-col gap-3 p-4 sm:p-5">
+              <div className="flex flex-col gap-4 p-4 sm:p-5">
                 <div>
-                  <time className="text-sm font-medium text-slate-500 sm:text-base">
+                  <time className="text-xs font-semibold uppercase tracking-wider text-primary sm:text-sm">
                     {event.date}
                   </time>
-                  <h4 className="mt-1 text-xl font-bold text-primary sm:text-2xl">{event.title}</h4>
+                  <h4 className="mt-1.5 text-xl font-bold tracking-tight text-slate-800 sm:text-2xl">{event.title}</h4>
                   {event.summary && (
-                    <p className="mt-2 line-clamp-2 text-sm text-slate-600 sm:text-base">
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-600 sm:text-base">
                       {event.summary}
                     </p>
                   )}
                 </div>
                 <Link
                   href={`/events/${event.id}`}
-                  className="inline-flex min-h-[40px] w-fit items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-[0.98]"
+                  className="inline-flex min-h-[42px] w-fit items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/20 transition hover:bg-primary-light hover:shadow-lg hover:shadow-primary/25 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-[0.98]"
                 >
-                  View More
+                  View event
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </Link>
               </div>
             </article>
@@ -112,7 +114,7 @@ export function PastEventsCarousel() {
             type="button"
             onClick={() => goTo(-1)}
             aria-label="Previous event"
-            className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-primary shadow-md transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-95 sm:left-4"
+            className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow-lg ring-1 ring-slate-200/80 transition hover:bg-primary hover:text-white hover:ring-primary/30 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-95 sm:left-4"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -122,21 +124,21 @@ export function PastEventsCarousel() {
             type="button"
             onClick={() => goTo(1)}
             aria-label="Next event"
-            className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-primary shadow-md transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-95 sm:right-4"
+            className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow-lg ring-1 ring-slate-200/80 transition hover:bg-primary hover:text-white hover:ring-primary/30 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-95 sm:right-4"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
-          <div className="mt-4 flex justify-center gap-2">
+          <div className="mt-5 flex justify-center gap-2">
             {events.map((_, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => setIndex(i)}
                 aria-label={`Go to event ${i + 1}`}
-                className={`h-2 w-2 rounded-full transition sm:h-2.5 sm:w-2.5 ${
-                  i === index ? "scale-110 bg-primary" : "bg-slate-300 hover:bg-slate-400"
+                className={`h-2 rounded-full transition-all sm:h-2.5 ${
+                  i === index ? "w-6 bg-primary sm:w-8" : "w-2 bg-slate-300 hover:bg-slate-400 sm:w-2.5"
                 }`}
               />
             ))}

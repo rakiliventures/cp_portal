@@ -8,7 +8,7 @@ import { WelcomeHero } from "@/components/landing/WelcomeHero";
 export default function LandingPage() {
   return (
     <div className="landing-bg min-h-screen">
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-sm sm:px-6 sm:py-4">
+      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md sm:px-6 sm:py-4">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           <Link href="/" className="flex min-h-[44px] items-center transition opacity-90 hover:opacity-100 active:opacity-100">
             <Image
@@ -23,9 +23,9 @@ export default function LandingPage() {
           </Link>
           <Link
             href="/login"
-            className="flex min-h-[44px] items-center rounded-xl bg-accent px-4 py-2.5 font-semibold text-primary-dark shadow-accent-soft transition hover:bg-accent-light hover:shadow-accent-glow focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-white active:scale-[0.98] sm:px-5"
+            className="flex min-h-[44px] items-center rounded-xl bg-primary px-5 py-2.5 font-semibold tracking-wide text-white shadow-lg shadow-primary/25 transition hover:bg-primary-light hover:shadow-xl hover:shadow-primary/30 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white active:scale-[0.98] sm:px-6"
           >
-            Member login
+            Member Login
           </Link>
         </div>
       </header>
@@ -33,25 +33,31 @@ export default function LandingPage() {
       <main>
         <WelcomeHero />
 
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 md:py-20">
+        <div className="mx-auto max-w-6xl px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 md:pt-10 md:pb-20">
 
-        {/* Full-width white background for featured events */}
+        {/* Featured events — full-width */}
         <section
-          className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen mb-12 bg-white py-8 shadow-sm sm:mb-16 sm:py-10 md:py-12"
-          aria-labelledby="featured-events-heading"
+          className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen mb-12 overflow-hidden sm:mb-16"
+          aria-labelledby="upcoming-events-heading"
         >
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-8">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-6">
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-50 via-white to-primary/[0.03]" aria-hidden />
+          <div className="relative mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:py-10">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-10">
               <div className="min-w-0">
-                <h2 id="featured-events-heading" className="sr-only">Featured events</h2>
-                <h3 className="mb-4 text-xl font-bold text-primary sm:mb-5 sm:text-2xl md:text-3xl">
-                  <span className="inline-block border-b-2 border-accent pb-1">Upcoming events</span>
-                </h3>
+                <h2 id="upcoming-events-heading" className="mb-4 flex items-center gap-2 sm:mb-5">
+                  <span className="h-1 w-8 rounded-full bg-primary" aria-hidden />
+                  <span className="text-lg font-bold tracking-tight text-slate-800 sm:text-xl md:text-2xl">
+                    Upcoming Events
+                  </span>
+                </h2>
                 <EventsCarousel />
               </div>
               <div className="min-w-0">
-                <h3 className="mb-4 text-xl font-bold text-primary sm:mb-5 sm:text-2xl md:text-3xl">
-                  <span className="inline-block border-b-2 border-accent pb-1">Past events</span>
+                <h3 className="mb-4 flex items-center gap-2 sm:mb-5">
+                  <span className="h-1 w-8 rounded-full bg-accent" aria-hidden />
+                  <span className="text-lg font-bold tracking-tight text-slate-800 sm:text-xl md:text-2xl">
+                    Past Events
+                  </span>
                 </h3>
                 <PastEventsCarousel />
               </div>
@@ -59,92 +65,95 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* About Us — below featured events */}
-        <section id="about-us" className="mb-16 sm:mb-20" aria-labelledby="about-heading">
-          <h2 id="about-heading" className="mb-8 text-center text-2xl font-bold text-primary sm:mb-10 sm:text-3xl md:text-4xl">
-            <span className="inline-block border-b-2 border-accent pb-2">About Us</span>
+        {/* About Us — compact and clear */}
+        <section id="about-us" className="mb-12 sm:mb-16" aria-labelledby="about-heading">
+          <p className="mb-1 text-center text-xs font-semibold uppercase tracking-[0.2em] text-primary sm:text-sm">Our community</p>
+          <h2 id="about-heading" className="mb-6 text-center text-xl font-bold tracking-tight text-slate-800 sm:mb-8 sm:text-2xl md:text-3xl">
+            About Us
           </h2>
 
-          {/* Infographic stats strip */}
-          <div className="mb-10 grid grid-cols-3 gap-4 sm:gap-6">
-            <div className="flex flex-col items-center rounded-2xl border border-primary/20 bg-white/80 px-4 py-5 shadow-sm backdrop-blur sm:px-6 sm:py-6">
-              <span className="mb-1 text-2xl font-bold text-accent sm:text-3xl">2004</span>
-              <span className="text-center text-xs font-medium text-slate-600 sm:text-sm">Year founded</span>
+          {/* Stats strip */}
+          <div className="mb-8 grid grid-cols-3 gap-3 sm:gap-4">
+            <div className="flex flex-col items-center rounded-xl border border-primary/15 bg-white px-3 py-4 shadow-sm transition hover:border-primary/25 sm:px-4 sm:py-4">
+              <span className="text-xl font-bold text-primary sm:text-2xl">2004</span>
+              <span className="mt-0.5 text-center text-xs font-medium text-slate-600">Year founded</span>
             </div>
-            <div className="flex flex-col items-center rounded-2xl border border-primary/20 bg-white/80 px-4 py-5 shadow-sm backdrop-blur sm:px-6 sm:py-6">
-              <span className="mb-1 text-2xl font-bold text-primary sm:text-3xl">3</span>
-              <span className="text-center text-xs font-medium text-slate-600 sm:text-sm">Workgroups</span>
+            <div className="flex flex-col items-center rounded-xl border border-primary/15 bg-white px-3 py-4 shadow-sm transition hover:border-primary/25 sm:px-4 sm:py-4">
+              <span className="text-xl font-bold text-accent sm:text-2xl">3</span>
+              <span className="mt-0.5 text-center text-xs font-medium text-slate-600">Workgroups</span>
             </div>
-            <div className="flex flex-col items-center rounded-2xl border border-primary/20 bg-white/80 px-4 py-5 shadow-sm backdrop-blur sm:px-6 sm:py-6">
-              <span className="mb-1 text-2xl font-bold text-accent sm:text-3xl">22–40</span>
-              <span className="text-center text-xs font-medium text-slate-600 sm:text-sm">Age range</span>
+            <div className="flex flex-col items-center rounded-xl border border-primary/15 bg-white px-3 py-4 shadow-sm transition hover:border-primary/25 sm:px-4 sm:py-4">
+              <span className="text-xl font-bold text-primary sm:text-2xl">25+</span>
+              <span className="mt-0.5 text-center text-xs font-medium text-slate-600">Age (years)</span>
             </div>
           </div>
 
-          <div className="space-y-8 sm:space-y-10">
+          <div className="space-y-5 sm:space-y-6">
             {/* Who We Are */}
-            <div className="landing-glass-card flex flex-col gap-6 rounded-2xl p-5 sm:flex-row sm:gap-8 sm:p-8 md:p-10">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:h-16 sm:w-16">
-                <svg className="h-7 w-7 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <div className="flex flex-col gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-md transition hover:shadow-lg sm:flex-row sm:gap-5 sm:p-5 md:p-6">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary sm:h-11 sm:w-11">
+                <svg className="h-6 w-6 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
               <div className="min-w-0">
-                <h3 className="mb-2 text-lg font-bold text-primary sm:text-xl">Who We Are</h3>
-                <p className="text-sm leading-relaxed text-slate-700 sm:text-base">
+                <h3 className="mb-1 text-base font-bold text-primary sm:text-lg">Who We Are</h3>
+                <p className="text-sm leading-snug text-slate-700">
                   The Catholic Professionals of OLQP South B (CP) is a dynamic community of young Catholic professionals who believe in serving God through excellence in our careers. We embody &quot;Ora Et Labora&quot; (Prayer and Work), creating a space where faith meets professional ambition.
                 </p>
               </div>
             </div>
 
             {/* Our History */}
-            <div className="landing-glass-card flex flex-col gap-6 rounded-2xl p-5 sm:flex-row sm:gap-8 sm:p-8 md:p-10">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent-dark sm:h-16 sm:w-16">
-                <svg className="h-7 w-7 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <div className="flex flex-col gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-md transition hover:shadow-lg sm:flex-row sm:gap-5 sm:p-5 md:p-6">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent-dark sm:h-11 sm:w-11">
+                <svg className="h-6 w-6 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div className="min-w-0">
-                <h3 className="mb-2 text-lg font-bold text-primary sm:text-xl">Our History</h3>
-                <p className="text-sm leading-relaxed text-slate-700 sm:text-base">
-                  Founded in 2004 by a group of young Catholic professionals at OLQP South B, our community started as informal coffee meetups after Sunday mass. We recognized the unique challenges young professionals face in integrating faith with career ambitions. Today, we&apos;re a thriving network of lawyers, doctors, engineers, teachers, entrepreneurs, and creatives who support each other&apos;s professional and spiritual growth.
+                <h3 className="mb-1 text-base font-bold text-primary sm:text-lg">Our History</h3>
+                <p className="text-sm leading-snug text-slate-700">
+                  Founded in 2004 by young Catholic professionals at OLQP South B, we started as informal coffee meetups after Sunday mass. Today we&apos;re a thriving network of lawyers, doctors, engineers, teachers, entrepreneurs, and creatives supporting each other&apos;s professional and spiritual growth.
                 </p>
               </div>
             </div>
 
-            {/* Membership — with mini infographic */}
-            <div className="landing-glass-card flex flex-col gap-6 rounded-2xl p-5 sm:flex-row sm:gap-8 sm:p-8 md:p-10">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:h-16 sm:w-16">
-                <svg className="h-7 w-7 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            {/* Membership */}
+            <div className="flex flex-col gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-md transition hover:shadow-lg sm:flex-row sm:gap-5 sm:p-5 md:p-6">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary sm:h-11 sm:w-11">
+                <svg className="h-6 w-6 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="mb-2 text-lg font-bold text-primary sm:text-xl">Membership</h3>
-                <p className="mb-4 text-sm leading-relaxed text-slate-700 sm:text-base">
-                  We welcome young Catholic professionals (ages 22–40) from all career stages — from recent graduates to established professionals. Whether you&apos;re just starting your career or looking to make a meaningful transition, our diverse community offers mentorship, networking, and spiritual support.
+                <h3 className="mb-1 text-base font-bold text-primary sm:text-lg">Membership</h3>
+                <p className="mb-3 text-sm leading-snug text-slate-700">
+                  We welcome young Catholic professionals (25 years and above) from all career stages. Our community offers mentorship, networking, and spiritual support.
                 </p>
-                <div className="flex flex-wrap gap-3">
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary sm:text-sm">Mentorship</span>
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary sm:text-sm">Networking</span>
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary sm:text-sm">Spiritual support</span>
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">Mentorship</span>
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">Networking</span>
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">Spiritual support</span>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Join Us — full-width distinct background */}
+        {/* Join Us — compact */}
         <section
           id="join-us"
-          className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-slate-100 py-12 sm:py-16 md:py-20"
+          className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden py-8 sm:py-10 md:py-12"
           aria-labelledby="join-us-heading"
         >
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-8">
-            <h2 id="join-us-heading" className="mb-2 text-center text-2xl font-bold text-slate-800 sm:text-3xl md:text-4xl">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] via-slate-50 to-slate-100" aria-hidden />
+          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 md:px-8">
+            <p className="mb-1 text-center text-xs font-semibold uppercase tracking-[0.2em] text-primary sm:text-sm">Get involved</p>
+            <h2 id="join-us-heading" className="mb-2 text-center text-xl font-bold tracking-tight text-slate-800 sm:text-2xl md:text-3xl">
               Join Our Network
             </h2>
-            <p className="mx-auto mb-8 max-w-xl text-center text-slate-600 sm:mb-10 sm:text-lg">
+            <p className="mx-auto mb-6 max-w-xl text-center text-sm text-slate-600 sm:mb-8 sm:text-base">
               Ready to connect with like-minded young Catholic professionals? Let&apos;s start the conversation.
             </p>
             <div className="mx-auto max-w-lg">
@@ -153,21 +162,24 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Connect With Us — full-width light grey background, two cards */}
+        {/* Connect With Us — full-width, two cards */}
         <section
-          className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-slate-100 py-12 sm:py-16 md:py-20"
+          className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-slate-50 py-12 sm:py-16 md:py-20"
           aria-labelledby="connect-heading"
         >
           <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-8">
-            <h2 id="connect-heading" className="mb-2 text-center text-2xl font-bold text-slate-800 sm:text-3xl md:text-4xl">
+            <p className="mb-2 text-center text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+              Stay in touch
+            </p>
+            <h2 id="connect-heading" className="mb-4 text-center text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl md:text-4xl">
               Connect With Us
             </h2>
-            <p className="mx-auto mb-8 max-w-xl text-center text-slate-600 sm:mb-10 sm:text-lg">
+            <p className="mx-auto mb-10 max-w-xl text-center text-slate-600 sm:mb-12 sm:text-lg">
               Ready to join our community of young Catholic professionals?
             </p>
             <div className="grid gap-6 md:grid-cols-2 md:gap-8">
               {/* Left card: Contact Information */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 md:p-8">
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-lg shadow-slate-200/30 transition hover:shadow-xl sm:p-6 md:p-8">
                 <h3 className="mb-5 text-lg font-bold text-slate-800 sm:text-xl">Contact Information</h3>
                 <ul className="space-y-4">
                   <li className="flex gap-3">
@@ -218,7 +230,7 @@ export default function LandingPage() {
                 </ul>
               </div>
               {/* Right card: Connect With Us (social + meeting details) */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 md:p-8">
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-lg shadow-slate-200/30 transition hover:shadow-xl sm:p-6 md:p-8">
                 <h3 className="mb-3 text-lg font-bold text-slate-800 sm:text-xl">Connect With Us</h3>
                 <p className="mb-5 text-sm leading-relaxed text-slate-700 sm:text-base">
                   Follow us on social media to stay updated with our latest events, activities, and community news.
@@ -271,9 +283,9 @@ export default function LandingPage() {
 
         </div>
 
-        <footer className="border-t border-slate-200 bg-white/60 px-4 pt-8 pb-6 text-center backdrop-blur-sm sm:pt-10 sm:pb-8">
-          <p className="text-sm text-slate-600 sm:text-base">Catholic Professionals of OLQP South B (CP)</p>
-          <p className="mt-3 text-xs font-medium text-accent-dark sm:text-sm">Serving God Through our Professions</p>
+        <footer className="border-t border-slate-200/80 bg-slate-50 px-4 pt-10 pb-8 text-center sm:pt-12 sm:pb-10">
+          <p className="text-sm font-medium text-slate-700 sm:text-base">Catholic Professionals of OLQP South B (CP)</p>
+          <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-primary sm:text-sm">Serving God Through our Professions</p>
         </footer>
       </main>
     </div>

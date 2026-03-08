@@ -33,22 +33,22 @@ export function JoinUsForm() {
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-md sm:p-6 md:p-8">
-      <h3 className="mb-2 text-xl font-bold text-slate-800 sm:text-2xl">Join Our Community</h3>
-      <p className="mb-6 text-sm text-slate-600 sm:text-base">
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md sm:p-5 md:p-6">
+      <h3 className="mb-1 text-lg font-bold text-slate-800 sm:text-xl">Join Our Community</h3>
+      <p className="mb-4 text-sm text-slate-600">
         Interested in becoming a member? Send us your inquiry and we&apos;ll get back to you.
       </p>
       {status === "sent" && (
-        <div className="mb-6 rounded-xl bg-green-50 p-4 text-sm text-green-800">
+        <div className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-800">
           Thank you. Your inquiry has been sent.
         </div>
       )}
       {status === "error" && (
-        <div className="mb-6 rounded-xl bg-red-50 p-4 text-sm text-red-800">
+        <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">
           Something went wrong. Please try again.
         </div>
       )}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label htmlFor="join-name" className="mb-1.5 block text-sm font-medium text-slate-700">
             Full Name
@@ -127,7 +127,7 @@ export function JoinUsForm() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               className={`${inputBase} min-h-[120px] resize-y pl-11 pt-3`}
-              placeholder="Tell us about your profession and why you'd like to join..."
+              placeholder="Ask or tell us anything you would like us to know..."
               rows={4}
             />
           </div>
