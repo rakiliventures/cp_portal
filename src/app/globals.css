@@ -3,29 +3,89 @@
 @tailwind utilities;
 
 :root {
-  --primary: #1e3a5f;
-  --primary-light: #2c5282;
-  --primary-dark: #0f2744;
-  --accent: #c9a227;
-  --accent-light: #e6c04a;
-  --accent-dark: #9a7b1a;
+  /* CP logo theme: primary green, accent gold - vibrant variants for landing */
+  --primary: #367C00;
+  --primary-light: #429a0a;
+  --primary-dark: #2a5d00;
+  --primary-glow: #4a9e0f;
+  --accent: #C4A634;
+  --accent-light: #e5c755;
+  --accent-bright: #f0d878;
+  --accent-dark: #a68a2b;
 }
 
+/* Mobile-first: prevent horizontal scroll, safe areas, touch */
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+/* Touch-friendly: remove tap highlight, add active states */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+/* iOS: prevent zoom on input focus (min 16px) */
+input, select, textarea {
+  font-size: 16px;
+}
+@media (min-width: 768px) {
+  input, select, textarea {
+    font-size: inherit;
+  }
+}
+
+/* Landing: white background */
+.landing-bg {
+  background: linear-gradient(180deg, #ffffff 0%, #f8faf8 30%, #f0f5ee 100%);
+  position: relative;
+}
+.landing-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(54, 124, 0, 0.06) 0%, transparent 55%);
+  pointer-events: none;
+}
+.landing-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Section cards on white landing */
+.landing-glass-card {
+  background: #ffffff;
+  border: 1px solid rgba(54, 124, 0, 0.15);
+  box-shadow: 0 4px 24px rgba(54, 124, 0, 0.08);
+}
+.landing-card-highlight {
+  background: #ffffff;
+  border: 1px solid rgba(54, 124, 0, 0.2);
+  box-shadow: 0 4px 20px rgba(54, 124, 0, 0.1);
 }
 
 @layer components {
   .btn-primary {
-    @apply rounded-lg bg-primary px-4 py-2 text-white hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    @apply rounded-xl bg-primary px-4 py-3 text-white hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px] inline-flex items-center justify-center;
   }
   .btn-secondary {
-    @apply rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2;
+    @apply rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 min-h-[44px] inline-flex items-center justify-center;
   }
   .card {
-    @apply rounded-xl border border-slate-200 bg-white p-6 shadow-sm;
+    @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6;
   }
   .input {
-    @apply w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary;
+    @apply w-full min-h-[44px] rounded-xl border border-slate-300 px-3 py-3 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0;
+  }
+  .input-textarea {
+    @apply min-h-[120px] resize-y;
+  }
+  .page-heading {
+    @apply mb-4 text-xl font-semibold text-slate-900 sm:mb-5 sm:text-2xl;
   }
 }

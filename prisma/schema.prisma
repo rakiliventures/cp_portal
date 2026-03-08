@@ -57,38 +57,42 @@ model User {
   moduleAssignmentsGiven UserModuleAssignment[] @relation("AssignmentsGivenBy")
 }
 
-model SubGroup {
-  id          String   @id @default(cuid())
-  name        String   // Community Outreach | Team Building | Spiritual Development
-  description String?
+model Workgroup {
+  id           String   @id @default(cuid())
+  name         String
+  abbreviation String   @unique // COR | SPIRI | TB
+  status       String   @default("active") // active | inactive
+  description  String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  memberProfiles     MemberProfile[]
-  memberWorkgroupHistory MemberWorkgroupHistory[]
-  events             Event[]
+  memberProfiles          MemberProfile[]
+  memberWorkgroupHistory  MemberWorkgroupHistory[]
+  events                  Event[]
 }
 
 model MemberProfile {
-  userId     String   @id @map("user_id")
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subGroupId String   @map("sub_group_id")
-  subGroup   SubGroup @relation(fields: [subGroupId], references: [id])
-  joinDate   DateTime @map("join_date")
-  mentorId   String?  @map("mentor_id")
-  mentor     User?    @relation("Mentor", fields: [mentorId], references: [id])
-  preferredName String? @map("preferred_name")
+  userId        String    @id @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workgroupId   String    @map("workgroup_id")
+  workgroup     Workgroup @relation(fields: [workgroupId], references: [id])
+  joinDate      DateTime  @map("join_date")
+  mentorId      String?   @map("mentor_id")
+  mentor        User?     @relation("Mentor", fields: [mentorId], references: [id])
+  preferredName String?   @map("preferred_name")
 }
 
 model MemberWorkgroupHistory {
-  id          String    @id @default(cuid())
-  memberId    String    @map("member_id")
-  member      User      @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  subGroupId  String    @map("sub_group_id")
-  subGroup    SubGroup  @relation(fields: [subGroupId], references: [id])
-  effectiveFrom DateTime @map("effective_from")
+  id            String    @id @default(cuid())
+  memberId      String    @map("member_id")
+  member        User      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  workgroupId   String    @map("workgroup_id")
+  workgroup     Workgroup @relation(fields: [workgroupId], references: [id])
+  effectiveFrom DateTime  @map("effective_from")
   effectiveTo   DateTime? @map("effective_to") // null = current
-  recordedById String?  @map("recorded_by_id")
-  recordedBy   User?    @relation("WorkgroupHistoryRecordedBy", fields: [recordedById], references: [id])
-  recordedAt   DateTime @default(now()) @map("recorded_at")
+  recordedById  String?   @map("recorded_by_id")
+  recordedBy    User?    @relation("WorkgroupHistoryRecordedBy", fields: [recordedById], references: [id])
+  recordedAt    DateTime  @default(now()) @map("recorded_at")
 }
 
 model Module {
@@ -175,7 +179,7 @@ model Event {
   imageBannerUrl        String?   @map("image_banner_url")
   venue                 String?
   workgroupAssignedId   String?   @map("workgroup_assigned_id")
-  workgroupAssigned     SubGroup? @relation(fields: [workgroupAssignedId], references: [id])
+  workgroupAssigned     Workgroup? @relation(fields: [workgroupAssignedId], references: [id])
   contactPersonId       String?   @map("contact_person_id")
   contactPerson         User?     @relation("EventContactPerson", fields: [contactPersonId], references: [id])
   reminderDays          String?   @map("reminder_days") // e.g. [7,1] JSON

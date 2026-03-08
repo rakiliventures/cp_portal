@@ -1,9 +1,9 @@
 export default function InquiriesPage() {
   return (
-    <div>
-      <h1 className="mb-4 text-2xl font-semibold text-slate-900">Inquiries Management</h1>
+    <div className="min-w-0">
+      <h1 className="page-heading">Inquiries Management</h1>
       <div className="card">
-        <p className="text-slate-600">
+        <p className="text-sm text-slate-600 sm:text-base">
           View guest inquiries from landing page, search/filter, add notes, update status, convert
           to member.
         </p>

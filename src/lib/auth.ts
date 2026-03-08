@@ -22,7 +22,7 @@ export const authOptions: NextAuthOptions = {
             userModuleAssignments: {
               include: { module: true },
             },
-            memberProfile: { include: { subGroup: true, mentor: true } },
+            memberProfile: { include: { workgroup: true, mentor: true } },
           },
         });
         if (!user?.passwordHash) return null;

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function InquiryPage() {
   const [name, setName] = useState("");
@@ -31,10 +32,13 @@ export default function InquiryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-12">
+    <div className="min-h-screen bg-white px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-md">
-        <div className="card">
-          <h1 className="mb-6 text-2xl font-semibold text-primary">Send an inquiry</h1>
+        <div className="card border-primary/20">
+          <div className="mb-5 flex flex-col items-start gap-2 sm:mb-6 sm:flex-row sm:items-center sm:gap-3">
+            <Image src="/images/logo.jpg" alt="" width={56} height={28} className="h-9 w-auto shrink-0 object-contain" />
+            <h1 className="text-xl font-semibold text-primary sm:text-2xl">Send an inquiry</h1>
+          </div>
           <p className="mb-4 text-slate-600">
             Interested in joining Catholic Professionals? Send your details and we’ll get back to you.
           </p>
@@ -96,16 +100,16 @@ export default function InquiryPage() {
                 id="message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="input min-h-[100px]"
+                className="input input-textarea min-h-[120px]"
                 rows={4}
               />
             </div>
-            <button type="submit" disabled={status === "sending"} className="btn-primary w-full">
+            <button type="submit" disabled={status === "sending"} className="btn-primary w-full min-h-[48px]">
               {status === "sending" ? "Sending…" : "Send inquiry"}
             </button>
           </form>
-          <p className="mt-4 text-center text-sm text-slate-600">
-            <Link href="/" className="text-primary hover:underline">
+          <p className="mt-5 text-center text-sm text-slate-600">
+            <Link href="/" className="inline-block min-h-[44px] py-2 text-primary hover:text-primary-dark hover:underline active:opacity-80">
               Back to home
             </Link>
           </p>

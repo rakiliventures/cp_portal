@@ -44,19 +44,65 @@ export function canAccessModule(
   return false;
 }
 
-export function getMenuModules(modules: ModuleAssignment[] | undefined, isSuperAdmin: boolean) {
-  const codes = [
+export type MenuItem =
+  | { type: "item"; code: string; label: string; href: string }
+  | {
+      type: "group";
+      label: string;
+      children: Array<{ code: string; label: string; href: string }>;
+    };
+
+export function getMenuModules(modules: ModuleAssignment[] | undefined, isSuperAdmin: boolean): MenuItem[] {
+  const hasAccess = (code: string) => canAccessModule(modules, isSuperAdmin, code, "view");
+
+  const dashboardChildren = [
     { code: MODULE_CODES.PERSONAL_DASHBOARD, label: "My Dashboard", href: "/app/dashboard" },
-    { code: MODULE_CODES.MEMBERSHIP, label: "Membership", href: "/app/membership" },
-    { code: MODULE_CODES.FINANCE, label: "Finance", href: "/app/finance" },
-    { code: MODULE_CODES.EVENTS, label: "Events", href: "/app/events" },
-    { code: MODULE_CODES.PAST_EVENTS, label: "Past Events", href: "/app/events?view=past" },
-    { code: MODULE_CODES.CALENDAR, label: "Upcoming Events", href: "/app/events?view=upcoming" },
-    { code: MODULE_CODES.GROUP_WIDE_REPORTS, label: "Group Wide Reports", href: "/app/reports" },
-    { code: MODULE_CODES.DOWNLOADS, label: "Downloads", href: "/app/downloads" },
-    { code: MODULE_CODES.INQUIRIES_MANAGEMENT, label: "Inquiries", href: "/app/inquiries" },
+    { code: MODULE_CODES.GROUP_WIDE_REPORTS, label: "Group Dashboard", href: "/app/reports" },
+  ].filter((c) => hasAccess(c.code));
+
+  const items: MenuItem[] = [];
+
+  if (dashboardChildren.length > 0) {
+    items.push({ type: "group", label: "Dashboard", children: dashboardChildren });
+  }
+
+  const financeChildren = [
+    { code: MODULE_CODES.FINANCE, label: "Budget", href: "/app/finance/budget" },
+    { code: MODULE_CODES.FINANCE, label: "Payments", href: "/app/finance/payments" },
+    { code: MODULE_CODES.FINANCE, label: "Expenses", href: "/app/finance/expenses" },
+  ].filter(() => hasAccess(MODULE_CODES.FINANCE));
+
+  if (financeChildren.length > 0) {
+    items.push({ type: "group", label: "Finance", children: financeChildren });
+  }
+
+  const settingsChildren = [
     { code: MODULE_CODES.NOTIFICATIONS_SETTINGS, label: "Notifications Settings", href: "/app/notifications-settings" },
     { code: MODULE_CODES.USER_MANAGEMENT, label: "User Management", href: "/app/user-management" },
+  ].filter((c) => hasAccess(c.code));
+
+  if (settingsChildren.length > 0) {
+    items.push({ type: "group", label: "Settings", children: settingsChildren });
+  }
+
+  const eventsChildren = [
+    { code: MODULE_CODES.CALENDAR, label: "Upcoming Events", href: "/app/events?view=upcoming" },
+    { code: MODULE_CODES.PAST_EVENTS, label: "Past Events", href: "/app/events?view=past" },
+  ].filter((c) => hasAccess(c.code));
+
+  if (eventsChildren.length > 0) {
+    items.push({ type: "group", label: "Events", children: eventsChildren });
+  }
+
+  const rest: Array<{ code: string; label: string; href: string }> = [
+    { code: MODULE_CODES.MEMBERSHIP, label: "Membership", href: "/app/membership" },
+    { code: MODULE_CODES.DOWNLOADS, label: "Downloads", href: "/app/downloads" },
+    { code: MODULE_CODES.INQUIRIES_MANAGEMENT, label: "Inquiries", href: "/app/inquiries" },
   ];
-  return codes.filter((item) => canAccessModule(modules, isSuperAdmin, item.code, "view"));
+
+  rest.forEach((item) => {
+    if (hasAccess(item.code)) items.push({ type: "item", ...item });
+  });
+
+  return items;
 }
