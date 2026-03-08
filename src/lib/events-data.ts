@@ -36,6 +36,13 @@ export const UPCOMING_EVENTS: UpcomingEvent[] = [
 
 export const PAST_EVENTS: PastEvent[] = [
   {
+    id: "5",
+    title: "Dinner 2024",
+    imageUrl: "/images/events/dinner_2024.jpeg",
+    date: "6 Dec 2024",
+    theme: "Men-Black Tie, Ladies-Elegant Evening Gown",
+  },
+  {
     id: "2",
     title: "Dinner 2025",
     imageUrl: "/images/events/dinner_2025.jpeg",

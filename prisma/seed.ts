@@ -281,6 +281,7 @@ async function main() {
   }
 
   const pastEventsData = [
+    { title: "Dinner 2024", date: new Date("2024-12-06"), theme: "Men-Black Tie, Ladies-Elegant Evening Gown" },
     { title: "Dinner 2025", date: new Date("2025-12-05"), theme: "Pre-Colonial Africa" },
     { title: "Retreat 2025", date: new Date("2025-09-04") },
     { title: "Medical Camp 2025", date: new Date("2025-09-13") },
