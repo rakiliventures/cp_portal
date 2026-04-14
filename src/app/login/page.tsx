@@ -76,7 +76,7 @@ function LoginForm() {
       redirect: false,
     });
     setLoading(false);
-    if (res?.error) {
+    if (!res || res.error || !res.ok) {
       setProgress(0);
       setError("Invalid email or password.");
       return;
