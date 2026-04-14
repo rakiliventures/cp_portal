@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import { canAccessModule, MODULE_CODES } from "@/lib/permissions";
+import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { EventForm } from "../EventForm";
 
@@ -19,7 +19,7 @@ export default async function NewEventPage({ searchParams }: PageProps) {
   if (!session?.user) redirect("/login?callbackUrl=/app/events/new");
 
   const isSuperAdmin = !!(session.user as { isSuperAdmin?: boolean }).isSuperAdmin;
-  const modules = (session.user as { modules?: { code: string; canCreate: boolean }[] }).modules;
+  const modules = (session.user as { modules?: ModuleAssignment[] }).modules;
   if (!canAccessModule(modules, isSuperAdmin, MODULE_CODES.EVENTS, "create")) {
     redirect("/app/events/cp-events");
   }

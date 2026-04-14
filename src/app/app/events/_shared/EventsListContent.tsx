@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { canAccessModule, MODULE_CODES } from "@/lib/permissions";
+import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { EventActions } from "../[id]/EventActions";
 
@@ -21,7 +21,7 @@ type Props = {
 export async function EventsListContent({ category, label, basePath, searchParams }: Props) {
   const session = await getServerSession(authOptions);
   const isSuperAdmin = !!(session?.user as { isSuperAdmin?: boolean })?.isSuperAdmin;
-  const modules = (session?.user as { modules?: { code: string; canCreate: boolean }[] })?.modules;
+  const modules = (session?.user as { modules?: ModuleAssignment[] })?.modules;
   const canCreate = canAccessModule(modules, isSuperAdmin, MODULE_CODES.EVENTS, "create");
   const canEdit   = canAccessModule(modules, isSuperAdmin, MODULE_CODES.EVENTS, "edit");
   const canDelete = canAccessModule(modules, isSuperAdmin, MODULE_CODES.EVENTS, "delete");

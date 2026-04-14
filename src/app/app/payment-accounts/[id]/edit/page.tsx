@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import { canAccessModule, MODULE_CODES } from "@/lib/permissions";
+import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { PaymentAccountForm } from "../../PaymentAccountForm";
 
@@ -16,7 +16,7 @@ export default async function EditPaymentAccountPage({
   if (!session?.user) redirect("/login?callbackUrl=/app/payment-accounts");
 
   const isSuperAdmin = !!(session.user as { isSuperAdmin?: boolean }).isSuperAdmin;
-  const modules = (session.user as { modules?: { code: string }[] }).modules;
+  const modules = (session.user as { modules?: ModuleAssignment[] }).modules;
   const canEdit = canAccessModule(modules, isSuperAdmin, MODULE_CODES.PAYMENT_ACCOUNTS, "edit");
   if (!canEdit) redirect("/app/payment-accounts");
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { canAccessModule, MODULE_CODES } from "@/lib/permissions";
+import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const isSuperAdmin = !!(session.user as { isSuperAdmin?: boolean }).isSuperAdmin;
-  const modules = (session.user as { modules?: { code: string; canCreate: boolean }[] }).modules;
+  const modules = (session.user as { modules?: ModuleAssignment[] }).modules;
   if (!canAccessModule(modules, isSuperAdmin, MODULE_CODES.EVENTS, "create")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

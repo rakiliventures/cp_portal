@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { canAccessModule, MODULE_CODES } from "@/lib/permissions";
+import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 type PageProps = { searchParams: Promise<{ view?: string }> };
@@ -9,7 +9,7 @@ type PageProps = { searchParams: Promise<{ view?: string }> };
 export default async function EventsPage({ searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
   const isSuperAdmin = !!(session?.user as { isSuperAdmin?: boolean })?.isSuperAdmin;
-  const modules = (session?.user as { modules?: { code: string; canCreate: boolean }[] })?.modules;
+  const modules = (session?.user as { modules?: ModuleAssignment[] })?.modules;
   const canCreate = canAccessModule(modules, isSuperAdmin, MODULE_CODES.EVENTS, "create");
 
   const params = await searchParams;
