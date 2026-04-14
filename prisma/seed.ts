@@ -72,6 +72,7 @@ async function main() {
         phone: "+254700000001",
         isSuperAdmin: true,
       },
+      include: { memberProfile: true },
     });
     console.log("Created super-admin:", admin.email);
   }
