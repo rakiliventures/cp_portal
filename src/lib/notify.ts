@@ -17,7 +17,8 @@ import { prisma } from "./prisma";
 async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   const user     = process.env.GMAIL_USER     ?? "cp.platforms@gmail.com";
   const password = process.env.GMAIL_APP_PASSWORD;
-  if (!password || !to) return false;
+  if (!password) { console.error("[notify] GMAIL_APP_PASSWORD env var is not set — email skipped"); return false; }
+  if (!to) return false;
 
   const transporter = nodemailer.createTransport({
     service: "gmail",

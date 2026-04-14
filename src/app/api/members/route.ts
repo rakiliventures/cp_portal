@@ -114,7 +114,7 @@ export async function POST(request: Request) {
 
     // Generate invoices and fire welcome notifications — non-blocking
     generateMemberInvoices(user.id, joinDate).catch(console.error);
-    notifyMemberWelcome(user.id, tempPassword).catch(console.error);
+    notifyMemberWelcome(user.id, tempPassword).catch((e) => console.error("[members] welcome notification failed:", e));
 
     return NextResponse.json({ ok: true, id: user.id });
   } catch (e) {
