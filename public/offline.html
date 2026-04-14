@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Offline — CP Portal</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      color: #334155;
+      margin: 0;
+      padding: 1rem;
+      text-align: center;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      padding: 2.5rem 2rem;
+      max-width: 360px;
+      width: 100%;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 3.5rem;
+      height: 3.5rem;
+      background: #367C0010;
+      border-radius: 50%;
+      margin-bottom: 1.25rem;
+    }
+    h1 { font-size: 1.25rem; font-weight: 700; margin: 0 0 0.5rem; color: #1e293b; }
+    p  { font-size: 0.875rem; color: #64748b; margin: 0 0 1.5rem; line-height: 1.6; }
+    button {
+      background: #367C00;
+      color: #fff;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.625rem 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #2d6800; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">
+      <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#367C00" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+      </svg>
+    </div>
+    <h1>You're offline</h1>
+    <p>No internet connection. Please check your network and try again.</p>
+    <button onclick="location.reload()">Try again</button>
+  </div>
+</body>
+</html>

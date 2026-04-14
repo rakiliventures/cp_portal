@@ -50,16 +50,8 @@ export default async function DashboardPage() {
   const currentYear = now.getFullYear();
   const yearStart = new Date(`${currentYear}-01-01`);
 
-  const [
-    user,
-    financialAccounts,
-    cpKittyPaidAgg,
-    welfarePaidAgg,
-    totalPastEvents,
-    pastEventsThisYear,   // replaces groupBy — counted in JS below
-    allAttendedRaw,       // all-time attendances; this-year stats derived in JS below
-    menteeProfiles,
-  ] = await Promise.all([
+  // Batch 1: user identity + event data (4 queries)
+  const [user, allPastEvents, allAttendedRaw, menteeProfiles] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -71,23 +63,10 @@ export default async function DashboardPage() {
         },
       },
     }),
-    prisma.financialAccount.findMany({
-      where:   { memberId: userId },
-      orderBy: { yearOrMonth: "desc" },
-    }),
-    prisma.payment.aggregate({
-      where: { memberId: userId, account: { code: "CP-KITTY" } },
-      _sum:  { amount: true },
-    }),
-    prisma.payment.aggregate({
-      where: { memberId: userId, account: { code: "CP-WELFARE" } },
-      _sum:  { amount: true },
-    }),
-    prisma.event.count({ where: { date: { lt: now } } }),
-    // All past events this year — grouped by category in JS
+    // All past events — count derived in JS; this-year filter applied in JS
     prisma.event.findMany({
-      where:  { date: { gte: yearStart, lt: now } },
-      select: { category: true },
+      where:  { date: { lt: now } },
+      select: { category: true, date: true },
     }),
     // All attended events (all time) — this-year filter applied in JS
     prisma.eventAttendance.findMany({
@@ -101,6 +80,26 @@ export default async function DashboardPage() {
   ]);
 
   if (!user) redirect("/login?callbackUrl=/app/dashboard");
+
+  // Batch 2: financial data (3 queries) — run after user check
+  const [financialAccounts, cpKittyPaidAgg, welfarePaidAgg] = await Promise.all([
+    prisma.financialAccount.findMany({
+      where:   { memberId: userId },
+      orderBy: { yearOrMonth: "desc" },
+    }),
+    prisma.payment.aggregate({
+      where: { memberId: userId, account: { code: "CP-KITTY" } },
+      _sum:  { amount: true },
+    }),
+    prisma.payment.aggregate({
+      where: { memberId: userId, account: { code: "CP-WELFARE" } },
+      _sum:  { amount: true },
+    }),
+  ]);
+
+  // Derive event counts from the single allPastEvents fetch
+  const totalPastEvents   = allPastEvents.length;
+  const pastEventsThisYear = allPastEvents.filter((e) => new Date(e.date) >= yearStart);
 
   const profile = user.memberProfile;
 
@@ -233,12 +232,6 @@ export default async function DashboardPage() {
               {profile && (
                 <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
                   {profile.workgroup.name}
-                </span>
-              )}
-              {joinDate && (
-                <span className="text-xs text-slate-400">
-                  Member since {joinDate.toLocaleDateString("en-GB", { month: "short", year: "numeric" })}
-                  {years > 0 && ` · ${years} ${years === 1 ? "yr" : "yrs"}`}
                 </span>
               )}
             </div>

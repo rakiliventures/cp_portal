@@ -32,7 +32,7 @@ export default async function AppEventDetailPage({ params }: PageProps) {
       where: { id },
       include: {
         workgroupAssigned: { select: { name: true, abbreviation: true } },
-        contactPerson:     { select: { name: true, email: true } },
+        contactPerson:     { select: { name: true, phone: true } },
         attendances: {
           where:   { attendeeType: "Member" },
           include: { member: { select: { id: true, name: true } } },
@@ -158,8 +158,8 @@ export default async function AppEventDetailPage({ params }: PageProps) {
                 <dt className="w-28 shrink-0 font-medium text-slate-500">Contact</dt>
                 <dd className="text-slate-700">
                   {event.contactPerson.name}
-                  {event.contactPerson.email && (
-                    <span className="text-slate-500"> ({event.contactPerson.email})</span>
+                  {event.contactPerson.phone && (
+                    <span className="text-slate-500"> ({event.contactPerson.phone})</span>
                   )}
                 </dd>
               </div>

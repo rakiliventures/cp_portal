@@ -5,6 +5,25 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "CP — Catholic Professionals",
   description: "Catholic Professional group portal: membership, finance, events, and reports.",
+  manifest: "/site.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "CP Portal",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png" },
+    ],
+    other: [
+      { rel: "mask-icon", url: "/android-chrome-192x192.png" },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
@@ -21,7 +40,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased overscroll-x-none">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased overscroll-x-none" suppressHydrationWarning>
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>

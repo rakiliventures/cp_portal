@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { User } from "next-auth";
 import { getMenuModules } from "@/lib/permissions";
 import { NavigationLoader } from "./NavigationLoader";
@@ -83,6 +83,142 @@ function HamburgerIcon({ open }: { open: boolean }) {
       <span className={`absolute left-0 top-2 block h-0.5 w-6 bg-current transition-all duration-200 ${open ? "opacity-0" : "opacity-100"}`} />
       <span className={`absolute left-0 block h-0.5 w-6 bg-current transition-all duration-200 ${open ? "top-2 -rotate-45" : "top-3"}`} />
     </span>
+  );
+}
+
+// ── Change Password Modal ──────────────────────────────────────────
+function ChangePasswordModal({ onClose }: { onClose: () => void }) {
+  const [current, setCurrent]   = useState("");
+  const [next, setNext]         = useState("");
+  const [confirm, setConfirm]   = useState("");
+  const [error, setError]       = useState("");
+  const [success, setSuccess]   = useState(false);
+  const [saving, setSaving]     = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (next !== confirm) { setError("New passwords do not match."); return; }
+    if (next.length < 8)  { setError("New password must be at least 8 characters."); return; }
+    setSaving(true);
+    const res = await fetch("/api/auth/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword: current, newPassword: next }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Failed to change password.");
+      return;
+    }
+    setSuccess(true);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+          <h2 className="text-base font-semibold text-slate-800">Change Password</h2>
+          <button type="button" onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="px-5 py-5">
+          {success ? (
+            <div className="text-center">
+              <p className="mb-4 text-sm text-slate-700">Your password has been updated successfully.</p>
+              <button type="button" onClick={onClose} className="btn-primary w-full">Done</button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Current password</label>
+                <input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} className="input" required autoComplete="current-password" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">New password</label>
+                <input type="password" value={next} onChange={(e) => setNext(e.target.value)} className="input" required autoComplete="new-password" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Confirm new password</label>
+                <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="input" required autoComplete="new-password" />
+              </div>
+              {error && <p className="text-sm text-red-600">{error}</p>}
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" onClick={onClose} className="btn-secondary w-full sm:w-auto">Cancel</button>
+                <button type="submit" disabled={saving} className="btn-primary w-full sm:w-auto">{saving ? "Saving…" : "Update password"}</button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── User dropdown (top-left sidebar) ──────────────────────────────
+function UserMenu({ initials, name, email }: { initials: string; name?: string | null; email?: string | null }) {
+  const [open, setOpen]               = useState(false);
+  const [showChangePw, setShowChangePw] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <>
+      {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}
+      <div ref={ref} className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-slate-100 active:bg-slate-200"
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+            {initials}
+          </span>
+          <span className="hidden min-w-0 sm:block">
+            <span className="block truncate text-sm font-medium text-slate-700 leading-tight">{name ?? email}</span>
+            {name && email && <span className="block truncate text-[11px] text-slate-400 leading-tight">{email}</span>}
+          </span>
+          <svg className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-150 ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {open && (
+          <div className="absolute right-0 top-full z-50 mt-1 w-48 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+            <button
+              type="button"
+              onClick={() => { setOpen(false); setShowChangePw(true); }}
+              className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              <svg className="h-4 w-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+              </svg>
+              Change Password
+            </button>
+            <div className="border-t border-slate-100" />
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50"
+            >
+              <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+              </svg>
+              Sign out
+            </button>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -219,6 +355,14 @@ export function AppShell({ user, children }: AppShellProps) {
     );
   };
 
+  // ── User initials avatar ─────────────────────────────────────────
+  const initials = (user.name ?? user.email ?? "?")
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   // ── Sidebar content ─────────────────────────────────────────────
   const sidebarContent = (
     <div className="flex h-full min-h-0 flex-col bg-[#1a2035] px-3 py-4">
@@ -234,10 +378,6 @@ export function AppShell({ user, children }: AppShellProps) {
         <span className="text-base font-semibold text-white">CP Portal</span>
       </Link>
 
-      {/* LIST MENU section */}
-      <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
-        List Menu
-      </p>
       <nav className="flex-1 space-y-0.5 overflow-y-auto">
         {mainItems.map((entry) =>
           entry.type === "group" ? renderGroup(entry) : renderItem(entry)
@@ -256,14 +396,6 @@ export function AppShell({ user, children }: AppShellProps) {
       )}
     </div>
   );
-
-  // ── User initials avatar ─────────────────────────────────────────
-  const initials = (user.name ?? user.email ?? "?")
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -304,25 +436,8 @@ export function AppShell({ user, children }: AppShellProps) {
             <span className="text-sm font-semibold text-slate-700 md:hidden">CP Portal</span>
           </div>
 
-          {/* Right: user + sign out */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-                {initials}
-              </span>
-              <span className="hidden text-sm font-medium text-slate-700 sm:block">
-                {user.name ?? user.email}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-800 active:bg-slate-100"
-            >
-              <NavIcon name="logout" className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">Sign out</span>
-            </button>
-          </div>
+          {/* Right: user dropdown */}
+          <UserMenu initials={initials} name={user.name} email={user.email} />
         </header>
 
         {/* Main content */}
