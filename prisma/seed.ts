@@ -16,6 +16,7 @@ const MODULES = [
   { code: "RemindersConfiguration", name: "Notifications Settings", description: "Monthly reminder config" },
   { code: "InquiriesManagement", name: "Inquiries Management", description: "Guest inquiries" },
   { code: "UserManagement", name: "User Management", description: "Assign modules and permissions" },
+  { code: "PaymentAccounts", name: "Payment Accounts", description: "Manage payment accounts (CP-Kitty, CP-Welfare, etc.)" },
 ];
 
 async function main() {
@@ -43,6 +44,19 @@ async function main() {
   const communityOutreach = await prisma.workgroup.findUnique({ where: { abbreviation: "COR" } });
   const spiritualDev = await prisma.workgroup.findUnique({ where: { abbreviation: "SPIRI" } });
   const teamBuilding = await prisma.workgroup.findUnique({ where: { abbreviation: "TB" } });
+
+  // Seed payment accounts
+  const paymentAccountsData = [
+    { code: "CP-KITTY", name: "CP-Kitty", description: "CP Kitty contributions" },
+    { code: "CP-WELFARE", name: "CP-Welfare", description: "Welfare fund contributions" },
+  ];
+  for (const pa of paymentAccountsData) {
+    await prisma.paymentAccount.upsert({
+      where: { code: pa.code },
+      create: pa,
+      update: { name: pa.name, description: pa.description ?? undefined },
+    });
+  }
 
   // Create super-admin (also a member: has workgroup, mentor, mentees)
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@cp.local";
@@ -219,7 +233,7 @@ async function main() {
   if (adminForSeed?.memberProfile) {
     const batchId = "seed-batch-1";
 
-    const existingTxCount = await prisma.transaction.count({ where: { memberId: adminForSeed.id } });
+    const existingTxCount = await prisma.financialTransaction.count({ where: { memberId: adminForSeed.id } });
     if (existingTxCount === 0) {
       const payments: Array<{ accountType: string; amount: number; date: Date }> = [
         { accountType: "CP-KITTY", amount: 300, date: new Date("2024-01-05") },
@@ -236,7 +250,7 @@ async function main() {
         { accountType: "CP-Welfare", amount: 300, date: new Date("2025-02-07") },
       ];
       for (const p of payments) {
-        await prisma.transaction.create({
+        await prisma.financialTransaction.create({
           data: {
             memberId: adminForSeed.id,
             accountType: p.accountType,
@@ -323,6 +337,63 @@ async function main() {
     }
     console.log("Created past events and admin attendance for all past activities.");
   }
+
+  // Sample payments (Payment model: mpesa_code, date_paid, amount, account, member_id, payee_name)
+  const paymentAccountKitty = await prisma.paymentAccount.findUnique({ where: { code: "CP-KITTY" } });
+  const paymentAccountWelfare = await prisma.paymentAccount.findUnique({ where: { code: "CP-WELFARE" } });
+  const adminForPayments = await prisma.user.findUnique({ where: { email: adminEmail } });
+  const janeUser = await prisma.user.findUnique({ where: { email: "jane.wanjiku@cp.local" } });
+  const peterUser = await prisma.user.findUnique({ where: { email: "peter.kamau@cp.local" } });
+
+  if (paymentAccountKitty && paymentAccountWelfare && adminForPayments) {
+    let existingPaymentCount = 0;
+    try {
+      existingPaymentCount = await prisma.payment.count({ where: { memberId: adminForPayments.id } });
+    } catch {
+      // Payment model may not exist yet (run npx prisma generate)
+    }
+    if (existingPaymentCount === 0) {
+      const samplePayments: Array<{ mpesaCode: string; datePaid: Date; amount: number; accountId: string; memberId: string; payeeName: string }> = [
+        { mpesaCode: "QGH12345AB", datePaid: new Date("2025-01-05"), amount: 300, accountId: paymentAccountKitty.id, memberId: adminForPayments.id, payeeName: adminForPayments.name },
+        { mpesaCode: "QGH12345AC", datePaid: new Date("2025-01-05"), amount: 300, accountId: paymentAccountWelfare.id, memberId: adminForPayments.id, payeeName: adminForPayments.name },
+        { mpesaCode: "QGH12346AB", datePaid: new Date("2025-02-10"), amount: 300, accountId: paymentAccountKitty.id, memberId: adminForPayments.id, payeeName: adminForPayments.name },
+        { mpesaCode: "QGH12346AC", datePaid: new Date("2025-02-10"), amount: 300, accountId: paymentAccountWelfare.id, memberId: adminForPayments.id, payeeName: adminForPayments.name },
+        { mpesaCode: "QGH12347AB", datePaid: new Date("2025-03-08"), amount: 3600, accountId: paymentAccountKitty.id, memberId: adminForPayments.id, payeeName: adminForPayments.name },
+        { mpesaCode: "QGH12347AC", datePaid: new Date("2025-03-08"), amount: 3600, accountId: paymentAccountWelfare.id, memberId: adminForPayments.id, payeeName: adminForPayments.name },
+      ];
+      if (janeUser) {
+        samplePayments.push(
+          { mpesaCode: "QGH12350AB", datePaid: new Date("2025-01-12"), amount: 300, accountId: paymentAccountKitty.id, memberId: janeUser.id, payeeName: janeUser.name },
+          { mpesaCode: "QGH12350AC", datePaid: new Date("2025-01-12"), amount: 300, accountId: paymentAccountWelfare.id, memberId: janeUser.id, payeeName: janeUser.name },
+        );
+      }
+      if (peterUser) {
+        samplePayments.push(
+          { mpesaCode: "QGH12351AB", datePaid: new Date("2025-02-01"), amount: 1000, accountId: paymentAccountKitty.id, memberId: peterUser.id, payeeName: peterUser.name },
+        );
+      }
+      for (const p of samplePayments) {
+        await prisma.payment.create({
+          data: {
+            mpesaCode: p.mpesaCode,
+            datePaid: p.datePaid,
+            amount: p.amount,
+            accountId: p.accountId,
+            memberId: p.memberId,
+            payeeName: p.payeeName,
+          },
+        });
+      }
+      console.log(`Created ${samplePayments.length} sample payment(s).`);
+    }
+  }
+
+  // Set all users' password to cp@2026
+  const memberPasswordHash = await hash("cp@2026", 10);
+  const { count } = await prisma.user.updateMany({
+    data: { passwordHash: memberPasswordHash },
+  });
+  console.log(`Updated password to cp@2026 for ${count} user(s).`);
 
   console.log("Seed complete.");
 }

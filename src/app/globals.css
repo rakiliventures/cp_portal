@@ -89,3 +89,26 @@ input, select, textarea {
     @apply mb-4 text-xl font-semibold text-slate-900 sm:mb-5 sm:text-2xl;
   }
 }
+
+/* Navigation loader animations */
+@keyframes loader-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes loader-scale-in {
+  from { opacity: 0; transform: scale(0.88) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+.nav-loader-overlay {
+  animation: loader-fade-in 0.18s ease forwards;
+}
+.nav-loader-dialog {
+  animation: loader-scale-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Print: hide .no-print elements (filters, export buttons, sidebar, mobile header) */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

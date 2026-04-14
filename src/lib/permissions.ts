@@ -11,6 +11,7 @@ export const MODULE_CODES = {
   INQUIRIES_MANAGEMENT: "InquiriesManagement",
   NOTIFICATIONS_SETTINGS: "RemindersConfiguration",
   USER_MANAGEMENT: "UserManagement",
+  PAYMENT_ACCOUNTS: "PaymentAccounts",
   PAST_EVENTS: "PastEvents",
   CALENDAR: "Calendar",
   ATTENDANCE: "Attendance",
@@ -67,10 +68,14 @@ export function getMenuModules(modules: ModuleAssignment[] | undefined, isSuperA
   }
 
   const financeChildren = [
-    { code: MODULE_CODES.FINANCE, label: "Budget", href: "/app/finance/budget" },
-    { code: MODULE_CODES.FINANCE, label: "Payments", href: "/app/finance/payments" },
-    { code: MODULE_CODES.FINANCE, label: "Expenses", href: "/app/finance/expenses" },
-  ].filter(() => hasAccess(MODULE_CODES.FINANCE));
+    { code: MODULE_CODES.PERSONAL_DASHBOARD, label: "My Payments",             href: "/app/finance/my-payments" },
+    { code: MODULE_CODES.PERSONAL_DASHBOARD, label: "My Statement",             href: "/app/finance/my-statement" },
+    { code: MODULE_CODES.FINANCE,            label: "All Payments",             href: "/app/finance/payments" },
+    { code: MODULE_CODES.FINANCE,            label: "CP Kitty Summary Report",  href: "/app/finance/cp-kitty-report" },
+    { code: MODULE_CODES.FINANCE,            label: "Welfare Summary Report",   href: "/app/finance/welfare-report" },
+    { code: MODULE_CODES.FINANCE,            label: "Budget",                   href: "/app/finance/budget" },
+    { code: MODULE_CODES.FINANCE,            label: "Expenses",                 href: "/app/finance/expenses" },
+  ].filter((c) => hasAccess(c.code));
 
   if (financeChildren.length > 0) {
     items.push({ type: "group", label: "Finance", children: financeChildren });
@@ -79,25 +84,39 @@ export function getMenuModules(modules: ModuleAssignment[] | undefined, isSuperA
   const settingsChildren = [
     { code: MODULE_CODES.NOTIFICATIONS_SETTINGS, label: "Notifications Settings", href: "/app/notifications-settings" },
     { code: MODULE_CODES.USER_MANAGEMENT, label: "User Management", href: "/app/user-management" },
+    { code: MODULE_CODES.PAYMENT_ACCOUNTS, label: "Payment Accounts", href: "/app/payment-accounts" },
   ].filter((c) => hasAccess(c.code));
 
   if (settingsChildren.length > 0) {
     items.push({ type: "group", label: "Settings", children: settingsChildren });
   }
 
-  const eventsChildren = [
-    { code: MODULE_CODES.CALENDAR, label: "Upcoming Events", href: "/app/events?view=upcoming" },
-    { code: MODULE_CODES.PAST_EVENTS, label: "Past Events", href: "/app/events?view=past" },
-  ].filter((c) => hasAccess(c.code));
+  if (hasAccess(MODULE_CODES.EVENTS) || hasAccess(MODULE_CODES.CALENDAR) || hasAccess(MODULE_CODES.PAST_EVENTS)) {
+    items.push({
+      type: "group",
+      label: "Events",
+      children: [
+        { code: MODULE_CODES.EVENTS, label: "CP Events",    href: "/app/events/cp-events" },
+        { code: MODULE_CODES.EVENTS, label: "MGM Meetings", href: "/app/events/mgm" },
+        { code: MODULE_CODES.EVENTS, label: "Kachai",       href: "/app/events/kachai" },
+      ],
+    });
+  }
 
-  if (eventsChildren.length > 0) {
-    items.push({ type: "group", label: "Events", children: eventsChildren });
+  if (hasAccess(MODULE_CODES.MEMBERSHIP)) {
+    items.push({
+      type: "group",
+      label: "Membership",
+      children: [
+        { code: MODULE_CODES.MEMBERSHIP, label: "Current Members",      href: "/app/membership/current" },
+        { code: MODULE_CODES.MEMBERSHIP, label: "Deactivated Members",  href: "/app/membership/deactivated" },
+      ],
+    });
   }
 
   const rest: Array<{ code: string; label: string; href: string }> = [
-    { code: MODULE_CODES.MEMBERSHIP, label: "Membership", href: "/app/membership" },
-    { code: MODULE_CODES.DOWNLOADS, label: "Downloads", href: "/app/downloads" },
-    { code: MODULE_CODES.INQUIRIES_MANAGEMENT, label: "Inquiries", href: "/app/inquiries" },
+    { code: MODULE_CODES.DOWNLOADS,            label: "Downloads",  href: "/app/downloads" },
+    { code: MODULE_CODES.INQUIRIES_MANAGEMENT, label: "Inquiries",  href: "/app/inquiries" },
   ];
 
   rest.forEach((item) => {
