@@ -112,8 +112,44 @@ export function StatementTable({ rows, balances, memberName, generatedOn }: Prop
         </div>
       </div>
 
-      {/* ── Table ──────────────────────────────────────────────── */}
-      <div className="card overflow-hidden p-0 print:border print:shadow-none">
+      {/* ── Mobile card list ───────────────────────────────────── */}
+      <div className="sm:hidden space-y-3 print:hidden">
+        {rows.length === 0 ? (
+          <p className="py-10 text-center text-sm text-slate-400">No records yet.</p>
+        ) : (
+          paginated.map((row) => (
+            <div key={row.key} className="card p-4 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-700 leading-snug">{row.description}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{row.dateLabel}</p>
+                </div>
+                <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.account === "Welfare" ? "bg-blue-50 text-blue-700" : "bg-primary/10 text-primary"}`}>
+                  {row.account}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
+                <div className="text-center">
+                  <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Invoiced</p>
+                  <p className="text-sm font-semibold tabular-nums text-red-600">
+                    {row.debit > 0 ? formatCurrency(row.debit) : <span className="text-slate-300 font-normal">—</span>}
+                  </p>
+                </div>
+                <div className="h-6 w-px bg-slate-100" />
+                <div className="text-center">
+                  <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Paid</p>
+                  <p className="text-sm font-semibold tabular-nums text-green-700">
+                    {row.credit > 0 ? formatCurrency(row.credit) : <span className="text-slate-300 font-normal">—</span>}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ── Desktop table ──────────────────────────────────────── */}
+      <div className="hidden sm:block card overflow-hidden p-0 print:block print:border print:shadow-none">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[540px] text-sm">
             <thead>

@@ -84,8 +84,55 @@ export function MyPaymentsTable({ payments }: Props) {
         )}
       </div>
 
-      {/* Table */}
-      <div className="card overflow-hidden p-0">
+      {/* Mobile card list */}
+      <div className="sm:hidden space-y-3">
+        {payments.length === 0 ? (
+          <p className="py-10 text-center text-sm text-slate-400">No payments recorded yet.</p>
+        ) : (
+          paginated.map((p) => (
+            <div key={p.id} className="card p-4 space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-mono text-sm font-semibold text-slate-800">{p.mpesaCode}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{formatDate(p.datePaid)}</p>
+                </div>
+                <p className="text-base font-bold text-slate-800 tabular-nums shrink-0">{formatAmount(p.amount)}</p>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                  p.accountCode === "CP-WELFARE" ? "bg-blue-50 text-blue-700" : "bg-primary/10 text-primary"
+                }`}>
+                  {p.accountCode}
+                </span>
+                {p.verified ? (
+                  <div className="text-right">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      Approved
+                    </span>
+                    {p.verifiedBy && <p className="mt-0.5 text-[11px] text-slate-400 text-right">by {p.verifiedBy}</p>}
+                  </div>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Pending
+                  </span>
+                )}
+              </div>
+              {p.payeeName && (
+                <p className="text-xs text-slate-500 border-t border-slate-100 pt-2">{p.payeeName}</p>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden sm:block card overflow-hidden p-0">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
             <thead>

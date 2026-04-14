@@ -93,10 +93,17 @@ export default async function AppEventDetailPage({ params }: PageProps) {
 
       <article className="card overflow-hidden p-0">
         {event.imageBannerUrl && (
-          <div className="relative aspect-[2/1] w-full bg-slate-200">
-            <Image src={event.imageBannerUrl} alt={event.title} fill className="object-cover"
-              sizes="(max-width: 768px) 100vw, 672px" priority />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <div className="relative w-full bg-slate-200" style={{ aspectRatio: "16/7" }}>
+            <Image
+              src={event.imageBannerUrl}
+              alt={event.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 800px"
+              priority
+              unoptimized={event.imageBannerUrl.startsWith("http")}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-4 text-white sm:p-6">
               <div className="flex flex-wrap gap-2">
                 <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
@@ -106,8 +113,8 @@ export default async function AppEventDetailPage({ params }: PageProps) {
                   {categoryLabel}
                 </span>
               </div>
-              <time className="mt-2 block text-sm font-medium text-white/95">{dateStr}</time>
-              <h1 className="mt-1 text-2xl font-bold text-white sm:text-3xl">{event.title}</h1>
+              <time className="mt-2 block text-sm font-medium text-white/90">{dateStr}</time>
+              <h1 className="mt-1 text-xl font-bold text-white sm:text-3xl leading-tight">{event.title}</h1>
             </div>
           </div>
         )}

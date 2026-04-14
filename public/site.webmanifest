@@ -1,7 +1,7 @@
 {
-  "name": "CP Portal — Catholic Professionals",
+  "name": "CP - Catholic Professionals OLQP",
   "short_name": "CP Portal",
-  "description": "Catholic Professionals of OLQP South B — membership, finance, events, and reports.",
+  "description": "Ora et labora!!",
   "start_url": "/app/dashboard",
   "display": "standalone",
   "orientation": "portrait",

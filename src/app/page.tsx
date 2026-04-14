@@ -44,22 +44,22 @@ export default function LandingPage() {
           <div className="relative mx-auto max-w-6xl px-4 pt-4 pb-6 sm:px-6 sm:pt-5 sm:pb-8 md:px-8 md:pt-6 md:pb-10">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-10">
               <div className="min-w-0">
-                <h2 id="upcoming-events-heading" className="mb-4 flex items-center gap-2 sm:mb-5">
-                  <span className="h-1 w-8 rounded-full bg-primary" aria-hidden />
-                  <span className="text-lg font-bold tracking-tight text-slate-800 sm:text-xl md:text-2xl">
-                    Upcoming Events
-                  </span>
-                </h2>
-                <EventsCarousel />
-              </div>
-              <div className="min-w-0">
-                <h3 className="mb-4 flex items-center gap-2 sm:mb-5">
+                <h2 className="mb-4 flex items-center gap-2 sm:mb-5">
                   <span className="h-1 w-8 rounded-full bg-accent" aria-hidden />
                   <span className="text-lg font-bold tracking-tight text-slate-800 sm:text-xl md:text-2xl">
                     Past Events
                   </span>
-                </h3>
+                </h2>
                 <PastEventsCarousel />
+              </div>
+              <div className="min-w-0">
+                <h3 id="upcoming-events-heading" className="mb-4 flex items-center gap-2 sm:mb-5">
+                  <span className="h-1 w-8 rounded-full bg-primary" aria-hidden />
+                  <span className="text-lg font-bold tracking-tight text-slate-800 sm:text-xl md:text-2xl">
+                    Upcoming Events
+                  </span>
+                </h3>
+                <EventsCarousel />
               </div>
             </div>
           </div>

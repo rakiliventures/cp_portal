@@ -6,11 +6,40 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-function SigningInModal({ progress }: { progress: number }) {
+function ErrorToast({ message, onClose }: { message: string; onClose: () => void }) {
+  // Auto-dismiss after 5 seconds
+  useEffect(() => {
+    const t = setTimeout(onClose, 5000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+
+  return (
+    <div className="fixed top-5 left-1/2 z-50 -translate-x-1/2 w-full max-w-sm px-4 animate-in fade-in slide-in-from-top-2 duration-200">
+      <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 shadow-lg">
+        <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100">
+          <svg className="h-3 w-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <p className="flex-1 text-sm font-medium text-red-700">{message}</p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="shrink-0 rounded p-0.5 text-red-400 hover:bg-red-100 hover:text-red-600"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SigningInModal({ progress, navigating }: { progress: number; navigating: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
       <div className="w-full max-w-xs rounded-2xl bg-white px-6 py-7 shadow-2xl">
-        {/* Spinner + label */}
         <div className="mb-5 flex flex-col items-center gap-3">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
             <svg className="h-7 w-7 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
@@ -18,11 +47,11 @@ function SigningInModal({ progress }: { progress: number }) {
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-slate-700">Signing you in…</p>
+          <p className="text-sm font-semibold text-slate-700">
+            {navigating ? "Loading dashboard…" : "Signing you in…"}
+          </p>
           <p className="text-xs text-slate-400">Please wait a moment</p>
         </div>
-
-        {/* Progress bar */}
         <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
           <div
             className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
@@ -39,27 +68,25 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/app/dashboard";
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError]       = useState("");
-  const [loading, setLoading]   = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [email, setEmail]           = useState("");
+  const [password, setPassword]     = useState("");
+  const [error, setError]           = useState("");
+  const [loading, setLoading]       = useState(false);
+  const [navigating, setNavigating] = useState(false);
+  const [progress, setProgress]     = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Animate progress bar while loading
   useEffect(() => {
     if (loading) {
       setProgress(0);
       let current = 0;
       intervalRef.current = setInterval(() => {
-        // Advance quickly to ~85%, then slow down to wait for the real response
         current += current < 40 ? 8 : current < 70 ? 4 : current < 85 ? 1.5 : 0.3;
-        if (current >= 92) current = 92; // Hold at 92% until done
+        if (current >= 92) current = 92;
         setProgress(Math.round(current));
       }, 120);
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      // Jump to 100% then hide
       if (progress > 0) setProgress(100);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
@@ -70,17 +97,14 @@ function LoginForm() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    const res = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (!res || res.error || !res.ok) {
       setProgress(0);
-      setError("Invalid email or password.");
+      setError("Invalid email or password. Please try again.");
       return;
     }
+    setNavigating(true);
     setProgress(100);
     router.push(callbackUrl);
     router.refresh();
@@ -88,7 +112,8 @@ function LoginForm() {
 
   return (
     <>
-      {loading && <SigningInModal progress={progress} />}
+      {error && <ErrorToast message={error} onClose={() => setError("")} />}
+      {(loading || navigating) && <SigningInModal progress={progress} navigating={navigating} />}
 
       <div className="flex min-h-screen items-center justify-center bg-white px-4 py-6">
         <div className="w-full max-w-md">
@@ -99,9 +124,7 @@ function LoginForm() {
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">
-                  Email
-                </label>
+                <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">Email</label>
                 <input
                   id="email"
                   type="email"
@@ -113,9 +136,7 @@ function LoginForm() {
                 />
               </div>
               <div>
-                <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-                  Password
-                </label>
+                <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">Password</label>
                 <input
                   id="password"
                   type="password"
@@ -126,7 +147,6 @@ function LoginForm() {
                   autoComplete="current-password"
                 />
               </div>
-              {error && <p className="text-sm text-red-600">{error}</p>}
               <button type="submit" disabled={loading} className="btn-primary w-full min-h-[48px]">
                 {loading ? "Signing in…" : "Sign in"}
               </button>

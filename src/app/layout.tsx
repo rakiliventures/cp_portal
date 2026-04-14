@@ -3,8 +3,8 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CP — Catholic Professionals",
-  description: "Catholic Professional group portal: membership, finance, events, and reports.",
+  title: "CP - Catholic Professionals OLQP",
+  description: "Ora et labora!!",
   manifest: "/site.webmanifest",
   appleWebApp: {
     capable: true,

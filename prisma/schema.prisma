@@ -54,6 +54,7 @@ model User {
   budgetForecasts      BudgetForecast[]
   pastEventAttachments PastEventAttachment[]
   notificationLogs     NotificationLog[]
+  actionedInquiries    MembershipInquiry[]
   downloadableDocuments DownloadableDocument[]
   financialAccounts    FinancialAccount[]
   attendanceRecordedBy  EventAttendance[]   @relation("AttendanceRecordedBy")
@@ -261,15 +262,18 @@ model PastEventAttachment {
 }
 
 model MembershipInquiry {
-  id          String       @id @default(cuid())
-  name        String
-  contact     String
-  email       String
-  message     String       @db.Text
-  submittedAt DateTime     @default(now()) @map("submitted_at")
-  status      InquiryStatus @default(New)
-  notes       String?      @db.Text
-  createdAt   DateTime     @default(now()) @map("created_at")
+  id            String        @id @default(cuid())
+  name          String
+  contact       String
+  email         String
+  message       String        @db.Text
+  submittedAt   DateTime      @default(now()) @map("submitted_at")
+  status        InquiryStatus @default(New)
+  notes         String?       @db.Text
+  actionedById  String?       @map("actioned_by_id")
+  actionedBy    User?         @relation(fields: [actionedById], references: [id])
+  actionedAt    DateTime?     @map("actioned_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
 }
 
 model DownloadableDocument {

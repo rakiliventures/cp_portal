@@ -15,19 +15,38 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-          include: {
-            userModuleAssignments: {
-              include: { module: true },
+        if (!credentials?.email || !credentials?.password) {
+          console.error("[auth] Missing credentials");
+          return null;
+        }
+        let user;
+        try {
+          user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+            include: {
+              userModuleAssignments: {
+                include: { module: true },
+              },
+              memberProfile: { include: { workgroup: true, mentor: true } },
             },
-            memberProfile: { include: { workgroup: true, mentor: true } },
-          },
-        });
-        if (!user?.passwordHash) return null;
+          });
+        } catch (e) {
+          console.error("[auth] DB error:", e);
+          return null;
+        }
+        if (!user) {
+          console.error("[auth] User not found:", credentials.email);
+          return null;
+        }
+        if (!user.passwordHash) {
+          console.error("[auth] User has no password hash:", credentials.email);
+          return null;
+        }
         const ok = await compare(credentials.password, user.passwordHash);
-        if (!ok) return null;
+        if (!ok) {
+          console.error("[auth] Password mismatch for:", credentials.email);
+          return null;
+        }
         return {
           id: user.id,
           email: user.email,

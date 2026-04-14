@@ -63,9 +63,9 @@ export default async function DashboardPage() {
         },
       },
     }),
-    // All past events — count derived in JS; this-year filter applied in JS
+    // Past events in the current year only
     prisma.event.findMany({
-      where:  { date: { lt: now } },
+      where:  { date: { gte: yearStart, lt: now } },
       select: { category: true, date: true },
     }),
     // All attended events (all time) — this-year filter applied in JS
@@ -97,9 +97,8 @@ export default async function DashboardPage() {
     }),
   ]);
 
-  // Derive event counts from the single allPastEvents fetch
-  const totalPastEvents   = allPastEvents.length;
-  const pastEventsThisYear = allPastEvents.filter((e) => new Date(e.date) >= yearStart);
+  // allPastEvents is already scoped to the current year
+  const pastEventsThisYear = allPastEvents;
 
   const profile = user.memberProfile;
 
@@ -299,8 +298,8 @@ export default async function DashboardPage() {
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Activity Attendance</p>
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">{currentYear}</span>
             </div>
-            {totalPastEvents === 0 ? (
-              <p className="flex flex-1 items-center justify-center text-sm text-slate-400">No past events yet.</p>
+            {pastEventsThisYear.length === 0 ? (
+              <p className="flex flex-1 items-center justify-center text-sm text-slate-400">No past events this year.</p>
             ) : (
               <div className="flex flex-1 flex-col justify-center gap-4">
                 {attendanceRows.map((row) => {
