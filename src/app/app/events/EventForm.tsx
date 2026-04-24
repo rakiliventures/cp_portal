@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 type Workgroup = { id: string; name: string; abbreviation: string };
 type Member    = { id: string; name: string; email: string };
@@ -154,9 +155,7 @@ export function EventForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>
-      )}
+      <ErrorToast message={error} onClose={() => setError("")} />
 
       <div>
         <label htmlFor="title" className="mb-1 block text-sm font-medium text-slate-700">

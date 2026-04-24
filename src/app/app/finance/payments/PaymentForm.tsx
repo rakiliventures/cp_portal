@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 type Account = { id: string; code: string; name: string };
 type Member = { id: string; name: string; email: string };
@@ -12,6 +13,23 @@ export function PaymentForm({ accounts, members }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [mpesaCodeError, setMpesaCodeError] = useState<string | null>(null);
+
+  async function checkMpesaCodeUnique(code: string) {
+    const trimmed = code.trim();
+    if (!trimmed) return;
+    try {
+      const res = await fetch(`/api/payments?mpesaCode=${encodeURIComponent(trimmed)}`);
+      const data = await res.json().catch(() => ({}));
+      if (data.exists) {
+        setMpesaCodeError("This M-Pesa code is already recorded.");
+      } else {
+        setMpesaCodeError(null);
+      }
+    } catch {
+      // silent — server will re-validate on submit
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -26,6 +44,11 @@ export function PaymentForm({ accounts, members }: Props) {
     const memberId = (formData.get("memberId") as string)?.trim();
     const payeeName = (formData.get("payeeName") as string)?.trim();
 
+    if (mpesaCodeError) {
+      setError("Please fix the M-Pesa code before submitting.");
+      setSubmitting(false);
+      return;
+    }
     if (!mpesaCode || !datePaid || !accountId || !memberId || !payeeName) {
       setError("M-Pesa code, date, account, member, and payee name are required.");
       setSubmitting(false);
@@ -67,9 +90,7 @@ export function PaymentForm({ accounts, members }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>
-      )}
+      <ErrorToast message={error} onClose={() => setError("")} />
       <div>
         <label htmlFor="mpesaCode" className="mb-1 block text-sm font-medium text-slate-700">
           M-Pesa code <span className="text-red-600">*</span>
@@ -79,9 +100,14 @@ export function PaymentForm({ accounts, members }: Props) {
           name="mpesaCode"
           type="text"
           required
-          className="input font-mono"
+          className={`input font-mono${mpesaCodeError ? " border-red-500 focus:ring-red-500" : ""}`}
           placeholder="e.g. QGH12345AB"
+          onBlur={(e) => checkMpesaCodeUnique(e.target.value)}
+          onChange={() => setMpesaCodeError(null)}
         />
+        {mpesaCodeError && (
+          <p className="mt-1 text-sm text-red-600">{mpesaCodeError}</p>
+        )}
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>

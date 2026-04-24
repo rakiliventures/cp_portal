@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 type Workgroup = { id: string; abbreviation: string; name: string };
 type Mentor    = { id: string; name: string | null; workgroupName: string | null };
@@ -82,14 +83,7 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-6">
-      {apiError && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-          <svg className="mt-0.5 h-4 w-4 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-          </svg>
-          <p className="text-sm text-red-700">{apiError}</p>
-        </div>
-      )}
+      <ErrorToast message={apiError} onClose={() => setApiError("")} />
 
       {/* Personal details */}
       <div className="card space-y-5">

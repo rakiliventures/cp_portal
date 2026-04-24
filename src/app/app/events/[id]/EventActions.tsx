@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 type Props = {
   eventId:   string;
@@ -79,7 +80,7 @@ export function EventActions({ eventId, backHref, canEdit, canDelete, variant = 
               <p className="mt-2 text-sm text-slate-500">
                 This will permanently delete the event and all its attendance records. This action cannot be undone.
               </p>
-              {deleteError && <p className="mt-2 text-xs text-red-600">{deleteError}</p>}
+              <ErrorToast message={deleteError} onClose={() => setDeleteError("")} />
               <div className="mt-5 flex gap-3">
                 <button
                   type="button"

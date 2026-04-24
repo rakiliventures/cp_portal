@@ -70,11 +70,20 @@ function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl") ?? "/app/dashboard";
   const [email, setEmail]           = useState("");
   const [password, setPassword]     = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError]           = useState("");
   const [loading, setLoading]       = useState(false);
   const [navigating, setNavigating] = useState(false);
   const [progress, setProgress]     = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("cp_remembered_email");
+    if (saved) {
+      setEmail(saved);
+      setRememberMe(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (loading) {
@@ -97,6 +106,11 @@ function LoginForm() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    if (rememberMe) {
+      localStorage.setItem("cp_remembered_email", email);
+    } else {
+      localStorage.removeItem("cp_remembered_email");
+    }
     const res = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (!res || res.error || !res.ok) {
@@ -146,6 +160,18 @@ function LoginForm() {
                   required
                   autoComplete="current-password"
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="rememberMe"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-primary accent-primary cursor-pointer"
+                />
+                <label htmlFor="rememberMe" className="text-sm text-slate-600 cursor-pointer select-none">
+                  Remember me
+                </label>
               </div>
               <button type="submit" disabled={loading} className="btn-primary w-full min-h-[48px]">
                 {loading ? "Signing in…" : "Sign in"}

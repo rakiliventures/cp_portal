@@ -17,8 +17,16 @@ import { prisma } from "./prisma";
 async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   const user     = process.env.GMAIL_USER     ?? "cp.platforms@gmail.com";
   const password = process.env.GMAIL_APP_PASSWORD;
-  if (!password) { console.error("[notify] GMAIL_APP_PASSWORD env var is not set — email skipped"); return false; }
-  if (!to) return false;
+  if (!password) {
+    console.error("[notify] GMAIL_APP_PASSWORD is not set — email skipped");
+    return false;
+  }
+  if (!to) {
+    console.error("[notify] sendEmail called with empty recipient");
+    return false;
+  }
+
+  console.log(`[notify] sending email to ${to} | subject: "${subject}" | from: ${user}`);
 
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -26,15 +34,16 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
   });
 
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from:    `"CP Portal" <${user}>`,
       to,
       subject,
       html,
     });
+    console.log(`[notify] email sent OK — messageId: ${info.messageId}`);
     return true;
   } catch (e) {
-    console.error("[notify] email error", e);
+    console.error("[notify] email send failed:", e);
     return false;
   }
 }

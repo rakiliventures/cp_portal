@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 export type BudgetItem = {
   id:            string;
@@ -112,7 +113,7 @@ function AddBudgetModal({ onClose, onAdded }: { onClose: () => void; onAdded: (i
   return (
     <ModalShell title="Add Budget Item" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>}
+        <ErrorToast message={error ?? ""} onClose={() => setError(null)} />
         <BudgetFormFields />
         <div className="flex gap-3 pt-1">
           <button type="submit" disabled={saving}
@@ -161,7 +162,7 @@ function EditBudgetModal({ item, onClose, onUpdated }: { item: BudgetItem; onClo
   return (
     <ModalShell title="Edit Budget Item" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>}
+        <ErrorToast message={error ?? ""} onClose={() => setError(null)} />
         <BudgetFormFields defaults={{ title: item.title, date: dateInput, amount: String(item.forecastAmount) }} />
         <div className="flex gap-3 pt-1">
           <button type="submit" disabled={saving}
@@ -201,7 +202,7 @@ function DeleteBudgetModal({ item, onClose, onDeleted }: { item: BudgetItem; onC
   return (
     <ModalShell title="Delete Budget Item" onClose={onClose}>
       <div className="space-y-4">
-        {error && <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>}
+        <ErrorToast message={error ?? ""} onClose={() => setError(null)} />
         <p className="text-sm text-slate-700">
           Are you sure you want to delete <span className="font-semibold">{item.title}</span>? This cannot be undone.
         </p>

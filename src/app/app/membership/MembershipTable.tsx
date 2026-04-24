@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 
@@ -310,9 +311,7 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
               </select>
             </div>
 
-            {error && (
-              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-            )}
+            <ErrorToast message={error} onClose={() => setError("")} />
           </div>
 
           {/* Footer */}
@@ -404,9 +403,7 @@ function DeactivateModal({ member, onClose, onSuccess }: DeactivateModalProps) {
           </div>
         )}
 
-        {error && (
-          <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-        )}
+        <ErrorToast message={error} onClose={() => setError("")} />
         <div className="mt-5 flex gap-3">
           <button type="button" onClick={handleConfirm}
             disabled={saving || (isActive && !nameMatches)}
@@ -491,7 +488,7 @@ function InvoiceModal({ memberId, memberName, onClose, onSuccess }: InvoiceModal
               onChange={(e) => setNotes(e.target.value)}
               className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          <ErrorToast message={error} onClose={() => setError("")} />
           <div className="flex gap-3 pt-1">
             <button type="submit" disabled={submitting}
               className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-light disabled:opacity-60">

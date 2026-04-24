@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useCallback } from "react";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 type ImportRow = {
   mpesaCode: string;
@@ -158,9 +159,7 @@ export default function ImportPaymentsPage() {
             className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white file:hover:bg-primary-light"
           />
         </div>
-        {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>
-        )}
+        <ErrorToast message={error} onClose={() => setError("")} />
         {preview && preview.length > 0 && (
           <>
             <p className="text-sm text-slate-700">

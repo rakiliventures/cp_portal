@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 type Props = {
   paymentId: string;
@@ -48,7 +49,7 @@ export function PaymentActions({ paymentId, verified, canEdit, canDelete }: Prop
 
   return (
     <div className="flex items-center gap-1.5">
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      <ErrorToast message={error} onClose={() => setError("")} />
       {canEdit && (
         <button
           type="button"

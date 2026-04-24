@@ -6,6 +6,18 @@ import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/perm
 import { prisma } from "@/lib/prisma";
 import { notifyPaymentCaptured } from "@/lib/notify";
 
+export async function GET(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { searchParams } = new URL(request.url);
+  const mpesaCode = searchParams.get("mpesaCode")?.trim();
+  if (!mpesaCode) return NextResponse.json({ error: "mpesaCode required" }, { status: 400 });
+
+  const existing = await prisma.payment.findFirst({ where: { mpesaCode } });
+  return NextResponse.json({ exists: !!existing });
+}
+
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -35,6 +47,9 @@ export async function POST(request: Request) {
     if (!accountId) return NextResponse.json({ error: "Payment account is required." }, { status: 400 });
     if (!memberId) return NextResponse.json({ error: "Member is required." }, { status: 400 });
     if (!payeeName) return NextResponse.json({ error: "Payee name is required." }, { status: 400 });
+
+    const duplicate = await prisma.payment.findFirst({ where: { mpesaCode } });
+    if (duplicate) return NextResponse.json({ error: "A payment with this M-Pesa code already exists." }, { status: 409 });
 
     const [account, member] = await Promise.all([
       prisma.paymentAccount.findUnique({ where: { id: accountId } }),

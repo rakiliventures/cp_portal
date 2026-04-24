@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 type Attendance = {
   id: string;
@@ -122,7 +123,7 @@ export function EventAttendanceSection({
               {adding ? "Adding…" : "Add"}
             </button>
           </div>
-          {addError && <p className="mt-1.5 text-xs text-red-600">{addError}</p>}
+          <ErrorToast message={addError} onClose={() => setAddError("")} />
           {available.length === 0 && (
             <p className="mt-1.5 text-xs text-slate-400">
               All eligible members have already been recorded.

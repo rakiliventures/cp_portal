@@ -7,6 +7,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import type { User } from "next-auth";
 import { getMenuModules } from "@/lib/permissions";
 import { NavigationLoader } from "./NavigationLoader";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 type AppShellProps = { user: User & { id: string; modules?: unknown }; children: React.ReactNode };
 
@@ -86,6 +87,43 @@ function HamburgerIcon({ open }: { open: boolean }) {
   );
 }
 
+// ── Idle timeout constants ─────────────────────────────────────────
+const IDLE_TIMEOUT_MS  = 20 * 60 * 1000; // 20 minutes
+const IDLE_WARNING_MS  = 19 * 60 * 1000; // show warning at 19 minutes
+const ACTIVITY_EVENTS  = ["mousemove", "mousedown", "keydown", "touchstart", "scroll", "click"] as const;
+
+// ── Idle Warning Modal ─────────────────────────────────────────────
+function IdleWarningModal({ secondsLeft, onStayLoggedIn }: { secondsLeft: number; onStayLoggedIn: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4">
+      <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl">
+        <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
+          <svg className="h-5 w-5 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <h2 className="text-base font-semibold text-slate-800">Session Expiring</h2>
+        </div>
+        <div className="px-5 py-5">
+          <p className="mb-1 text-sm text-slate-600">
+            You&apos;ve been inactive for a while. You will be signed out automatically in:
+          </p>
+          <p className="my-3 text-center text-4xl font-bold tabular-nums text-red-600">
+            {secondsLeft}s
+          </p>
+          <p className="mb-5 text-center text-xs text-slate-400">Move your mouse or press any key to stay signed in.</p>
+          <button
+            type="button"
+            onClick={onStayLoggedIn}
+            className="inline-flex w-full min-h-[44px] items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          >
+            Stay signed in
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Change Password Modal ──────────────────────────────────────────
 function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   const [current, setCurrent]   = useState("");
@@ -144,7 +182,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
                 <label className="mb-1 block text-sm font-medium text-slate-700">Confirm new password</label>
                 <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="input" required autoComplete="new-password" />
               </div>
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              <ErrorToast message={error} onClose={() => setError("")} />
               <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <button type="button" onClick={onClose} className="btn-secondary w-full sm:w-auto">Cancel</button>
                 <button type="submit" disabled={saving} className="btn-primary w-full sm:w-auto">{saving ? "Saving…" : "Update password"}</button>
@@ -225,6 +263,47 @@ function UserMenu({ initials, name, email }: { initials: string; name?: string |
 export function AppShell({ user, children }: AppShellProps) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // ── Idle timeout ───────────────────────────────────────────────────
+  const [idleWarning, setIdleWarning] = useState(false);
+  const [idleCountdown, setIdleCountdown] = useState(60);
+  const idleTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const warningTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearTimers = useCallback(() => {
+    if (idleTimerRef.current)    clearTimeout(idleTimerRef.current);
+    if (warningTimerRef.current) clearInterval(warningTimerRef.current);
+  }, []);
+
+  const startIdleTimer = useCallback(() => {
+    clearTimers();
+    setIdleWarning(false);
+
+    // Show warning at 19 min
+    idleTimerRef.current = setTimeout(() => {
+      setIdleWarning(true);
+      setIdleCountdown(60);
+      warningTimerRef.current = setInterval(() => {
+        setIdleCountdown((s) => {
+          if (s <= 1) {
+            signOut({ callbackUrl: "/login" });
+            return 0;
+          }
+          return s - 1;
+        });
+      }, 1000);
+    }, IDLE_WARNING_MS);
+  }, [clearTimers]);
+
+  useEffect(() => {
+    startIdleTimer();
+    const reset = () => startIdleTimer();
+    ACTIVITY_EVENTS.forEach((ev) => window.addEventListener(ev, reset, { passive: true }));
+    return () => {
+      clearTimers();
+      ACTIVITY_EVENTS.forEach((ev) => window.removeEventListener(ev, reset));
+    };
+  }, [startIdleTimer, clearTimers]);
 
   const modules = (user.modules ?? []) as Array<{
     code: string; canView: boolean; canCreate: boolean; canEdit: boolean;
@@ -400,6 +479,12 @@ export function AppShell({ user, children }: AppShellProps) {
   return (
     <div className="flex h-screen overflow-hidden">
       <NavigationLoader />
+      {idleWarning && (
+        <IdleWarningModal
+          secondsLeft={idleCountdown}
+          onStayLoggedIn={startIdleTimer}
+        />
+      )}
       {/* Mobile overlay */}
       <button
         type="button"

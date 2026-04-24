@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 export type PaymentAccountOption = {
   id:   string;
@@ -361,9 +362,7 @@ export function ExpensesClient({ expenses, canCreate, paymentAccounts }: Props) 
                   />
                 </div>
 
-                {error && (
-                  <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-                )}
+                <ErrorToast message={error} onClose={() => setError("")} />
               </div>
 
               {/* Footer */}

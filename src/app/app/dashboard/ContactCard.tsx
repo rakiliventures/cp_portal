@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 type Props = {
   email: string;
@@ -114,7 +115,7 @@ export function ContactCard({ email: initialEmail, phone: initialPhone }: Props)
                 />
               </div>
 
-              {error && <p className="text-xs text-red-600">{error}</p>}
+              <ErrorToast message={error} onClose={() => setError("")} />
 
               <div className="flex gap-3 pt-1">
                 <button

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 export type Inquiry = {
   id:            string;
@@ -109,7 +110,7 @@ function ActionModal({
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          <ErrorToast message={error} onClose={() => setError("")} />
 
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={onClose} className="btn-secondary w-full sm:w-auto">Cancel</button>

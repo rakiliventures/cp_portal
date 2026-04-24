@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ErrorToast } from "@/components/ui/ErrorToast";
 
 export type SerializedDocument = {
   id:          string;
@@ -128,7 +129,7 @@ function AddDocumentModal({ onClose, onSuccess }: {
         <div className="space-y-4 px-5 py-4">
           <DocFormFields title={title} setTitle={setTitle} url={url} setUrl={setUrl}
             category={category} setCategory={setCategory} description={description} setDescription={setDescription} />
-          {error && <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+          <ErrorToast message={error} onClose={() => setError("")} />
         </div>
         <div className="flex justify-end gap-2 border-t border-slate-100 px-5 py-3">
           <button type="button" onClick={onClose}
@@ -180,7 +181,7 @@ function EditDocumentModal({ doc, onClose, onSuccess }: {
         <div className="space-y-4 px-5 py-4">
           <DocFormFields title={title} setTitle={setTitle} url={url} setUrl={setUrl}
             category={category} setCategory={setCategory} description={description} setDescription={setDescription} />
-          {error && <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+          <ErrorToast message={error} onClose={() => setError("")} />
         </div>
         <div className="flex justify-end gap-2 border-t border-slate-100 px-5 py-3">
           <button type="button" onClick={onClose}
@@ -229,7 +230,7 @@ function DeleteDocumentModal({ doc, onClose, onSuccess }: {
         <p className="mt-1.5 text-sm text-slate-500">
           Are you sure you want to delete <strong>{doc.title}</strong>? This cannot be undone.
         </p>
-        {error && <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+        <ErrorToast message={error} onClose={() => setError("")} />
         <div className="mt-5 flex gap-3">
           <button type="button" onClick={handleDelete} disabled={deleting}
             className="flex-1 inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-60">
