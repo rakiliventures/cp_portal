@@ -6,7 +6,7 @@ import { useEffect } from "react";
  * Fixed-position error toast that auto-dismisses after 5 seconds.
  * Renders on top of modals (z-[60]).
  */
-export function ErrorToast({ message, onClose }: { message: string; onClose: () => void }) {
+export function ErrorToast({ message, onClose }: { message: string | null; onClose: () => void }) {
   useEffect(() => {
     if (!message) return;
     const t = setTimeout(onClose, 5000);
