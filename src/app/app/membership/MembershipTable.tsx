@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { ErrorToast } from "@/components/ui/ErrorToast";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
+import { calculateAge, MIN_MEMBER_AGE } from "@/lib/age";
 
 export type SerializedMember = {
   id:              string;
@@ -19,6 +20,8 @@ export type SerializedMember = {
   joinDate:        string | null;
   birthday:        string | null;
   birthdayIso:     string | null;
+  dateCommissioned:    string | null;
+  dateCommissionedIso: string | null;
   cpKittyBalance:  number;
   welfareBalance:  number;
   hasArrears:      boolean;
@@ -105,6 +108,7 @@ function MemberDetailsModal({
               <Row label="Workgroup"   value={member.workgroupName} />
               <Row label="Joined"      value={member.joinDate} />
               <Row label="Birthday"    value={member.birthday} />
+              <Row label="Date commissioned" value={member.dateCommissioned} />
               <Row label="Mentor"      value={member.mentorName} />
             </div>
           </div>
@@ -208,6 +212,7 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
   const [workgroupId, setWorkgroupId] = useState(member.workgroupId ?? "");
   const [mentorId,    setMentorId]    = useState(member.mentorId ?? "");
   const [birthday,    setBirthday]    = useState(member.birthdayIso ?? "");
+  const [dateCommissioned, setDateCommissioned] = useState(member.dateCommissionedIso ?? "");
   const [saving,      setSaving]      = useState(false);
   const [error,       setError]       = useState("");
 
@@ -218,6 +223,10 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (birthday && calculateAge(new Date(birthday)) < MIN_MEMBER_AGE) {
+      setError(`Member must be at least ${MIN_MEMBER_AGE} years old.`);
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`/api/members/${member.id}`, {
@@ -230,6 +239,7 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
           workgroupId,
           mentorId:    mentorId || null,
           birthday:    birthday || null,
+          dateCommissioned: dateCommissioned || null,
         }),
       });
       if (res.ok) {
@@ -324,6 +334,15 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
                 Birthday <span className="text-slate-400 font-normal">(optional)</span>
               </label>
               <input type="date" value={birthday} onChange={(e) => setBirthday(e.target.value)} max={today}
+                className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+
+            {/* Date commissioned */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Date commissioned <span className="text-slate-400 font-normal">(optional)</span>
+              </label>
+              <input type="date" value={dateCommissioned} onChange={(e) => setDateCommissioned(e.target.value)} max={today}
                 className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorToast } from "@/components/ui/ErrorToast";
+import { calculateAge, MIN_MEMBER_AGE } from "@/lib/age";
 
 type Props = {
   email: string;
@@ -27,8 +28,12 @@ export function ContactCard({ email: initialEmail, phone: initialPhone, birthday
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
     setError("");
+    if (birthday && calculateAge(new Date(birthday)) < MIN_MEMBER_AGE) {
+      setError(`Member must be at least ${MIN_MEMBER_AGE} years old.`);
+      return;
+    }
+    setSaving(true);
     try {
       const res = await fetch("/api/profile", {
         method:  "PATCH",

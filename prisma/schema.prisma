@@ -36,6 +36,9 @@ model User {
   isSuperAdmin  Boolean    @default(false) @map("is_super_admin")
   status        UserStatus @default(Active)
   deactivatedAt DateTime?  @map("deactivated_at")
+  resetTokenHash      String?   @map("reset_token_hash")
+  resetTokenExpiresAt DateTime? @map("reset_token_expires_at")
+  mustChangePassword  Boolean   @default(false) @map("must_change_password")
   createdAt     DateTime   @default(now()) @map("created_at")
   updatedAt     DateTime   @updatedAt @map("updated_at")
 
@@ -86,6 +89,7 @@ model MemberProfile {
   mentor        User?     @relation("Mentor", fields: [mentorId], references: [id])
   preferredName String?   @map("preferred_name")
   birthday      DateTime? @db.Date
+  dateCommissioned DateTime? @map("date_commissioned") @db.Date
 }
 
 model MemberWorkgroupHistory {

@@ -242,6 +242,7 @@ function emailMemberWelcome(
   workgroupName: string,
   mentorName: string | null,
   mentorPhone: string | null,
+  loginUrl: string,
 ): string {
   const mentorLine = mentorName
     ? `${mentorName}${mentorPhone ? ` &middot; ${mentorPhone}` : ""}`
@@ -294,10 +295,21 @@ function emailMemberWelcome(
       Sign in at the CP Portal using your email and the temporary password below.
       Please update it to a password you can remember after your first login.
     </p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
       ${row("Email", email)}
-      ${row("Temporary password", `<span style="font-family:monospace;letter-spacing:2px;font-size:15px;">${tempPassword}</span>`)}
     </table>
+    <p style="margin:0 0 6px;color:#334155;font-size:13px;font-weight:600;">Temporary password</p>
+    <div style="margin:0 0 6px;padding:14px 16px;background:#f1f5f9;border:1px dashed #94a3b8;border-radius:10px;text-align:center;">
+      <span style="font-family:monospace;letter-spacing:3px;font-size:18px;font-weight:700;color:#1e293b;user-select:all;">${tempPassword}</span>
+    </div>
+    <p style="margin:0 0 24px;color:#94a3b8;font-size:12px;">
+      Tap and hold (or triple-click) the password above to select and copy it.
+    </p>
+
+    <p style="margin:0 0 24px;text-align:center;">
+      <a href="${loginUrl}" style="display:inline-block;background:#367C00;color:#ffffff;text-decoration:none;
+        font-weight:600;font-size:14px;padding:12px 28px;border-radius:10px;">Sign in to CP Portal</a>
+    </p>
 
     <p style="margin:0 0 4px;color:#334155;font-style:italic;">Ora et Labora.</p>
     <p style="margin:0;color:#64748b;font-size:13px;">CP Moderator, on behalf of CP OLQP South B</p>
@@ -341,7 +353,62 @@ function waMemberWelcome(
   );
 }
 
+// ── Password reset template ───────────────────────────────────────────────────
+
+function emailPasswordReset(name: string, resetUrl: string): string {
+  return `
+<div style="${BASE_STYLE}">
+  <div style="${HEADER_STYLE}">
+    <h2 style="margin:0;color:#ffffff;font-size:20px;">Reset your password</h2>
+    <p style="margin:4px 0 0;color:#bbf7d0;font-size:13px;">CP Portal</p>
+  </div>
+  <div style="${BODY_STYLE}">
+    <p style="margin:0 0 16px;color:#334155;">Hi <strong>${name}</strong>,</p>
+    <p style="margin:0 0 20px;color:#475569;line-height:1.6;">
+      We received a request to reset your CP Portal password. Click the button below to choose a new one.
+      This link expires in 1 hour.
+    </p>
+    <p style="margin:0 0 24px;text-align:center;">
+      <a href="${resetUrl}" style="display:inline-block;background:#367C00;color:#ffffff;text-decoration:none;
+        font-weight:600;font-size:14px;padding:12px 28px;border-radius:10px;">Reset password</a>
+    </p>
+    <p style="margin:0 0 8px;color:#94a3b8;font-size:12px;">
+      Or copy and paste this link into your browser:<br>
+      <span style="word-break:break-all;">${resetUrl}</span>
+    </p>
+    <p style="margin:20px 0 0;color:#94a3b8;font-size:13px;">
+      If you didn't request this, you can safely ignore this email — your password will not change.
+    </p>
+  </div>
+  <div style="${FOOTER_STYLE}">CP Portal &middot; Catholic Professional Management System</div>
+</div>`;
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
+
+export async function notifyPasswordReset(userId: string, resetUrl: string): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where:  { id: userId },
+    select: { id: true, name: true, email: true },
+  });
+  if (!user?.email) return;
+
+  const ok = await sendEmail(
+    user.email,
+    "Reset your CP Portal password",
+    emailPasswordReset(user.name ?? "there", resetUrl),
+  );
+  if (ok) {
+    await prisma.notificationLog.create({
+      data: {
+        memberId:   user.id,
+        channel:    "Email",
+        templateId: "password_reset",
+        payload:    JSON.stringify({ to: user.email }),
+      },
+    });
+  }
+}
 
 export async function notifyPaymentCaptured(paymentId: string): Promise<void> {
   const payment = await prisma.payment.findUnique({
@@ -396,6 +463,7 @@ export async function notifyMemberWelcome(userId: string, tempPassword: string):
   const workgroupName = user.memberProfile?.workgroup?.name ?? "CP";
   const mentorName   = user.memberProfile?.mentor?.name   ?? null;
   const mentorPhone  = user.memberProfile?.mentor?.phone  ?? null;
+  const loginUrl     = `${process.env.NEXTAUTH_URL ?? "https://cp-olqp.vercel.app"}/login`;
 
   await dispatch(
     user.id,
@@ -403,7 +471,7 @@ export async function notifyMemberWelcome(userId: string, tempPassword: string):
     user.phone ?? null,
     "member_welcome",
     "Welcome to Catholic Professionals of OLQP South B",
-    emailMemberWelcome(name, email, tempPassword, workgroupName, mentorName, mentorPhone),
+    emailMemberWelcome(name, email, tempPassword, workgroupName, mentorName, mentorPhone, loginUrl),
     waMemberWelcome(name, email, tempPassword, workgroupName, mentorName, mentorPhone),
     userId,
   );

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { calculateAge, MIN_MEMBER_AGE } from "@/lib/age";
 
 export async function PATCH(request: Request) {
   const session = await getServerSession(authOptions);
@@ -34,6 +35,9 @@ export async function PATCH(request: Request) {
         birthday = new Date(birthdayStr);
         if (isNaN(birthday.getTime()) || birthday > new Date()) {
           return NextResponse.json({ error: "Invalid birthday." }, { status: 400 });
+        }
+        if (calculateAge(birthday) < MIN_MEMBER_AGE) {
+          return NextResponse.json({ error: `A member must be at least ${MIN_MEMBER_AGE} years old.` }, { status: 400 });
         }
       }
     }
