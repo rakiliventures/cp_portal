@@ -82,8 +82,19 @@ export async function POST(request: Request) {
       }
     }
 
-    // Fetch the PersonalDashboard module for default assignment
-    const dashboardModule = await prisma.module.findUnique({ where: { code: "PersonalDashboard" } });
+    // Every new member gets read-only access to all community-facing modules by
+    // default. Create/edit/delete stays admin-only (super-admins bypass permission
+    // checks entirely; these assignments are view-only).
+    const defaultModules = await prisma.module.findMany({
+      where: {
+        code: {
+          in: [
+            "PersonalDashboard", "GroupWideReports", "Membership", "Finance",
+            "Events", "Downloads", "PastEvents", "Calendar", "Attendance",
+          ],
+        },
+      },
+    });
 
     const tempPassword = generateTempPassword();
     const passwordHash = await hash(tempPassword, 10);
@@ -119,12 +130,12 @@ export async function POST(request: Request) {
         },
       });
 
-      // Assign PersonalDashboard module by default
-      if (dashboardModule) {
+      // Assign default (read-only) modules to every new member
+      for (const mod of defaultModules) {
         await tx.userModuleAssignment.create({
           data: {
             userId:      newUser.id,
-            moduleId:    dashboardModule.id,
+            moduleId:    mod.id,
             canView:     true,
             canCreate:   false,
             canEdit:     false,

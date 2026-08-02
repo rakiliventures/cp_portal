@@ -1,9 +1,22 @@
 export const dynamic = "force-dynamic";
 
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/auth";
+import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { InquiriesClient, type Inquiry } from "./InquiriesClient";
 
 export default async function InquiriesPage() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) redirect("/login?callbackUrl=/app/inquiries");
+
+  const isSuperAdmin = !!(session.user as { isSuperAdmin?: boolean }).isSuperAdmin;
+  const modules = (session.user as { modules?: ModuleAssignment[] }).modules;
+  if (!canAccessModule(modules, isSuperAdmin, MODULE_CODES.INQUIRIES_MANAGEMENT, "view")) {
+    redirect("/app/dashboard");
+  }
+
   const rows = await prisma.membershipInquiry.findMany({
     include: { actionedBy: { select: { name: true } } },
     orderBy: { submittedAt: "desc" },
