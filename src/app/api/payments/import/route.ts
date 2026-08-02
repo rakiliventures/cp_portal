@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
@@ -87,10 +87,13 @@ export async function POST(request: Request) {
     created++;
   }
 
-  // Fire notifications after response — non-blocking
-  for (const id of createdIds) {
-    notifyPaymentCaptured(id).catch(console.error);
-  }
+  // Fire notifications after the response is sent, but keep the function
+  // alive until they complete.
+  after(async () => {
+    for (const id of createdIds) {
+      await notifyPaymentCaptured(id).catch(console.error);
+    }
+  });
 
   return NextResponse.json({ ok: true, created, skipped: skipped.length, skippedDetails: skipped });
 }

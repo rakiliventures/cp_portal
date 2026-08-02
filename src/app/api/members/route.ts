@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { hash } from "bcryptjs";
 import { authOptions } from "@/lib/auth";
@@ -138,8 +138,14 @@ export async function POST(request: Request) {
     });
 
     // Generate invoices and fire welcome notifications — non-blocking
-    generateMemberInvoices(user.id, joinDate).catch(console.error);
-    notifyMemberWelcome(user.id, tempPassword).catch((e) => console.error("[members] welcome notification failed:", e));
+    // Fire after the response is sent, but keep the serverless function alive
+    // until these complete (fire-and-forget alone can be killed mid-flight on Vercel).
+    after(async () => {
+      await generateMemberInvoices(user.id, joinDate).catch(console.error);
+      await notifyMemberWelcome(user.id, tempPassword).catch((e) =>
+        console.error("[members] welcome notification failed:", e)
+      );
+    });
 
     return NextResponse.json({ ok: true, id: user.id });
   } catch (e) {
