@@ -85,6 +85,7 @@ model MemberProfile {
   mentorId      String?   @map("mentor_id")
   mentor        User?     @relation("Mentor", fields: [mentorId], references: [id])
   preferredName String?   @map("preferred_name")
+  birthday      DateTime? @db.Date
 }
 
 model MemberWorkgroupHistory {

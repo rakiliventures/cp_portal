@@ -102,6 +102,14 @@ export async function fetchMemberPageData(statusFilter: "Active" | "Paused") {
             day: "numeric", month: "short", year: "numeric",
           })
         : null,
+      birthday:        u.memberProfile?.birthday
+        ? new Date(u.memberProfile.birthday).toLocaleDateString("en-GB", {
+            day: "numeric", month: "short", year: "numeric",
+          })
+        : null,
+      birthdayIso:     u.memberProfile?.birthday
+        ? new Date(u.memberProfile.birthday).toISOString().slice(0, 10)
+        : null,
       cpKittyBalance:  bal.cpKitty,
       welfareBalance:  bal.welfare,
       hasArrears:      bal.cpKitty < 0 || bal.welfare < 0,
