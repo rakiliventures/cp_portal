@@ -5,6 +5,7 @@ declare module "next-auth" {
     id?: string;
     isSuperAdmin?: boolean;
     status?: string;
+    mustChangePassword?: boolean;
     modules?: Array<{
       code: string;
       canView: boolean;
@@ -25,6 +26,7 @@ declare module "next-auth/jwt" {
     id?: string;
     isSuperAdmin?: boolean;
     status?: string;
+    mustChangePassword?: boolean;
     modules?: unknown;
   }
 }

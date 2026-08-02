@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorToast } from "@/components/ui/ErrorToast";
+import { calculateAge, MIN_MEMBER_AGE } from "@/lib/age";
 
 type Workgroup = { id: string; abbreviation: string; name: string };
 type Mentor    = { id: string; name: string | null; workgroupName: string | null };
@@ -28,6 +29,7 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
     joinDate:      today,
     preferredName: "",
     birthday:      "",
+    dateCommissioned: "",
   });
   const [errors, setErrors]   = useState<FieldError>({});
   const [apiError, setApiError] = useState("");
@@ -47,6 +49,9 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address.";
     if (!form.workgroupId)        errs.workgroupId = "Workgroup is required.";
     if (!form.joinDate)           errs.joinDate    = "Join date is required.";
+    if (form.birthday && calculateAge(new Date(form.birthday)) < MIN_MEMBER_AGE) {
+      errs.birthday = `Member must be at least ${MIN_MEMBER_AGE} years old.`;
+    }
     return errs;
   }
 
@@ -70,6 +75,7 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
           joinDate:      form.joinDate,
           preferredName: form.preferredName.trim() || null,
           birthday:      form.birthday || null,
+          dateCommissioned: form.dateCommissioned || null,
         }),
       });
       const data = await res.json();
@@ -166,8 +172,11 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
               value={form.birthday}
               onChange={set("birthday")}
               max={today}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+              className={`w-full rounded-xl border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
+                errors.birthday ? "border-red-400 bg-red-50" : "border-slate-300 bg-white focus:border-primary"
+              }`}
             />
+            {errors.birthday && <p className="mt-1 text-xs text-red-600">{errors.birthday}</p>}
           </div>
         </div>
       </div>
@@ -214,6 +223,20 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
               }`}
             />
             {errors.joinDate && <p className="mt-1 text-xs text-red-600">{errors.joinDate}</p>}
+          </div>
+
+          {/* Date commissioned */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Date commissioned <span className="text-slate-400 font-normal">(optional)</span>
+            </label>
+            <input
+              type="date"
+              value={form.dateCommissioned}
+              onChange={set("dateCommissioned")}
+              max={today}
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+            />
           </div>
 
           {/* Mentor */}

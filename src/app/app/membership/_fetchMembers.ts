@@ -110,6 +110,14 @@ export async function fetchMemberPageData(statusFilter: "Active" | "Paused") {
       birthdayIso:     u.memberProfile?.birthday
         ? new Date(u.memberProfile.birthday).toISOString().slice(0, 10)
         : null,
+      dateCommissioned:    u.memberProfile?.dateCommissioned
+        ? new Date(u.memberProfile.dateCommissioned).toLocaleDateString("en-GB", {
+            day: "numeric", month: "short", year: "numeric",
+          })
+        : null,
+      dateCommissionedIso: u.memberProfile?.dateCommissioned
+        ? new Date(u.memberProfile.dateCommissioned).toISOString().slice(0, 10)
+        : null,
       cpKittyBalance:  bal.cpKitty,
       welfareBalance:  bal.welfare,
       hasArrears:      bal.cpKitty < 0 || bal.welfare < 0,

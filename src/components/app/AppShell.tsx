@@ -124,14 +124,61 @@ function IdleWarningModal({ secondsLeft, onStayLoggedIn }: { secondsLeft: number
   );
 }
 
+// ── Password field with show/hide toggle ────────────────────────────
+function PasswordField({
+  label, value, onChange, autoComplete,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  autoComplete: string;
+}) {
+  const [shown, setShown] = useState(false);
+  return (
+    <div>
+      <label className="mb-1 block text-sm font-medium text-slate-700">{label}</label>
+      <div className="relative">
+        <input
+          type={shown ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="input pr-11"
+          required
+          autoComplete={autoComplete}
+        />
+        <button
+          type="button"
+          onClick={() => setShown((s) => !s)}
+          aria-label={shown ? "Hide password" : "Show password"}
+          aria-pressed={shown}
+          tabIndex={-1}
+          className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center text-slate-400 hover:text-slate-600"
+        >
+          {shown ? (
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.774 3.162 10.066 7.5a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+            </svg>
+          ) : (
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Change Password Modal ──────────────────────────────────────────
-function ChangePasswordModal({ onClose }: { onClose: () => void }) {
+function ChangePasswordModal({ onClose, forced = false }: { onClose?: () => void; forced?: boolean }) {
   const [current, setCurrent]   = useState("");
   const [next, setNext]         = useState("");
   const [confirm, setConfirm]   = useState("");
   const [error, setError]       = useState("");
   const [success, setSuccess]   = useState(false);
   const [saving, setSaving]     = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -153,38 +200,50 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
     setSuccess(true);
   }
 
+  function handleSignOut() {
+    setSigningOut(true);
+    signOut({ callbackUrl: "/login?passwordChanged=success" });
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-          <h2 className="text-base font-semibold text-slate-800">Change Password</h2>
-          <button type="button" onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
+          <h2 className="text-base font-semibold text-slate-800">{forced ? "Set a new password" : "Change Password"}</h2>
+          {!forced && !success && (
+            <button type="button" onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          )}
         </div>
         <div className="px-5 py-5">
           {success ? (
             <div className="text-center">
-              <p className="mb-4 text-sm text-slate-700">Your password has been updated successfully.</p>
-              <button type="button" onClick={onClose} className="btn-primary w-full">Done</button>
+              <p className="mb-4 text-sm text-slate-700">
+                Your password has been updated successfully. Please sign in again with your new password.
+              </p>
+              <button type="button" onClick={handleSignOut} disabled={signingOut} className="btn-primary w-full">
+                {signingOut ? "Signing you out…" : "Sign in again"}
+              </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Current password</label>
-                <input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} className="input" required autoComplete="current-password" />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">New password</label>
-                <input type="password" value={next} onChange={(e) => setNext(e.target.value)} className="input" required autoComplete="new-password" />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Confirm new password</label>
-                <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="input" required autoComplete="new-password" />
-              </div>
+              {forced && (
+                <p className="text-sm text-slate-600">
+                  For your security, please set a new password before continuing.
+                </p>
+              )}
+              <PasswordField
+                label={forced ? "Temporary password" : "Current password"}
+                value={current}
+                onChange={setCurrent}
+                autoComplete="current-password"
+              />
+              <PasswordField label="New password" value={next} onChange={setNext} autoComplete="new-password" />
+              <PasswordField label="Confirm new password" value={confirm} onChange={setConfirm} autoComplete="new-password" />
               <ErrorToast message={error} onClose={() => setError("")} />
               <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <button type="button" onClick={onClose} className="btn-secondary w-full sm:w-auto">Cancel</button>
+                {!forced && <button type="button" onClick={onClose} className="btn-secondary w-full sm:w-auto">Cancel</button>}
                 <button type="submit" disabled={saving} className="btn-primary w-full sm:w-auto">{saving ? "Saving…" : "Update password"}</button>
               </div>
             </form>
@@ -263,6 +322,11 @@ function UserMenu({ initials, name, email }: { initials: string; name?: string |
 export function AppShell({ user, children }: AppShellProps) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // ── Forced password change (first login with a temp password) ──────
+  // On success the modal signs the user out to re-authenticate with their
+  // new password, so there's nothing to clear here client-side.
+  const mustChangePassword = !!(user as { mustChangePassword?: boolean }).mustChangePassword;
 
   // ── Idle timeout ───────────────────────────────────────────────────
   const [idleWarning, setIdleWarning] = useState(false);
@@ -479,6 +543,9 @@ export function AppShell({ user, children }: AppShellProps) {
   return (
     <div className="flex h-screen overflow-hidden">
       <NavigationLoader />
+      {mustChangePassword && (
+        <ChangePasswordModal forced />
+      )}
       {idleWarning && (
         <IdleWarningModal
           secondsLeft={idleCountdown}
@@ -526,8 +593,8 @@ export function AppShell({ user, children }: AppShellProps) {
         </header>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-6">
-          <div className="mx-auto max-w-5xl">{children}</div>
+        <main className="flex-1 overflow-y-auto bg-slate-50 p-3 sm:p-6 lg:p-8">
+          <div className="mx-auto max-w-screen-2xl">{children}</div>
         </main>
       </div>
     </div>

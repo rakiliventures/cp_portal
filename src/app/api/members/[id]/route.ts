@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { calculateAge, MIN_MEMBER_AGE } from "@/lib/age";
 
 export async function PATCH(
   request: Request,
@@ -28,6 +29,7 @@ export async function PATCH(
     const workgroupId = String(body.workgroupId ?? "").trim();
     const mentorId    = body.mentorId ? String(body.mentorId).trim() : null;
     const birthdayStr = body.birthday ? String(body.birthday).trim() : null;
+    const dateCommissionedStr = body.dateCommissioned ? String(body.dateCommissioned).trim() : null;
 
     if (!name)        return NextResponse.json({ error: "Name is required." }, { status: 400 });
     if (!email)       return NextResponse.json({ error: "Email is required." }, { status: 400 });
@@ -38,6 +40,17 @@ export async function PATCH(
       birthday = new Date(birthdayStr);
       if (isNaN(birthday.getTime())) {
         return NextResponse.json({ error: "Invalid birthday." }, { status: 400 });
+      }
+      if (calculateAge(birthday) < MIN_MEMBER_AGE) {
+        return NextResponse.json({ error: `A member must be at least ${MIN_MEMBER_AGE} years old.` }, { status: 400 });
+      }
+    }
+
+    let dateCommissioned: Date | null = null;
+    if (dateCommissionedStr) {
+      dateCommissioned = new Date(dateCommissionedStr);
+      if (isNaN(dateCommissioned.getTime())) {
+        return NextResponse.json({ error: "Invalid date commissioned." }, { status: 400 });
       }
     }
 
@@ -83,7 +96,7 @@ export async function PATCH(
       }),
       prisma.memberProfile.update({
         where: { userId: id },
-        data:  { workgroupId, mentorId: mentorId || null, birthday },
+        data:  { workgroupId, mentorId: mentorId || null, birthday, dateCommissioned },
       }),
     ]);
 

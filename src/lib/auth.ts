@@ -53,6 +53,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           isSuperAdmin: user.isSuperAdmin,
           status: user.status,
+          mustChangePassword: user.mustChangePassword,
           modules: user.userModuleAssignments.map((a) => ({
             code: a.module.code,
             canView: a.canView,
@@ -66,12 +67,16 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.isSuperAdmin = (user as { isSuperAdmin?: boolean }).isSuperAdmin;
         token.status = (user as { status?: string }).status;
+        token.mustChangePassword = (user as { mustChangePassword?: boolean }).mustChangePassword;
         token.modules = (user as { modules?: unknown }).modules;
+      }
+      if (trigger === "update" && session && typeof session.mustChangePassword === "boolean") {
+        token.mustChangePassword = session.mustChangePassword;
       }
       return token;
     },
@@ -80,6 +85,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as { id?: string }).id = token.id as string;
         (session.user as { isSuperAdmin?: boolean }).isSuperAdmin = token.isSuperAdmin as boolean;
         (session.user as { status?: string }).status = token.status as string;
+        (session.user as { mustChangePassword?: boolean }).mustChangePassword = token.mustChangePassword as boolean;
         (session.user as { modules?: unknown }).modules = token.modules;
       }
       return session;

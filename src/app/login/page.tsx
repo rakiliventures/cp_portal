@@ -36,6 +36,19 @@ function ErrorToast({ message, onClose }: { message: string; onClose: () => void
   );
 }
 
+function SuccessBanner({ message }: { message: string }) {
+  return (
+    <div className="mb-4 flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-100">
+        <svg className="h-3 w-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+      </div>
+      <p className="text-sm font-medium text-green-700">{message}</p>
+    </div>
+  );
+}
+
 function SigningInModal({ progress, navigating }: { progress: number; navigating: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
@@ -68,6 +81,8 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/app/dashboard";
+  const resetSuccess = searchParams.get("reset") === "success";
+  const passwordChanged = searchParams.get("passwordChanged") === "success";
   const [email, setEmail]           = useState("");
   const [password, setPassword]     = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -137,6 +152,8 @@ function LoginForm() {
               <Image src="/images/logo.jpg" alt="" width={64} height={32} className="h-10 w-auto shrink-0 object-contain" />
               <h1 className="text-xl font-semibold text-primary sm:text-2xl">Member login</h1>
             </div>
+            {resetSuccess && <SuccessBanner message="Password reset successful. Please sign in with your new password." />}
+            {passwordChanged && <SuccessBanner message="Password changed successfully. Please sign in with your new password." />}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">Email</label>
@@ -151,7 +168,12 @@ function LoginForm() {
                 />
               </div>
               <div>
-                <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">Password</label>
+                <div className="mb-1 flex items-center justify-between">
+                  <label htmlFor="password" className="block text-sm font-medium text-slate-700">Password</label>
+                  <Link href="/forgot-password" className="text-xs font-medium text-primary hover:text-primary-dark hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <input
                     id="password"
