@@ -428,7 +428,11 @@ export default async function DashboardPage() {
           </div>
 
           {/* ── 6: Contacts ────────────────────────────────────── */}
-          <ContactCard email={user.email} phone={user.phone ?? null} />
+          <ContactCard
+            email={user.email}
+            phone={user.phone ?? null}
+            birthday={profile?.birthday ? new Date(profile.birthday).toISOString().slice(0, 10) : null}
+          />
 
         </div>
       )}

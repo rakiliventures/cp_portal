@@ -12,9 +12,10 @@ export async function PATCH(request: Request) {
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const body  = await request.json();
-    const email = body.email ? String(body.email).trim().toLowerCase() : undefined;
-    const phone = body.phone !== undefined ? (body.phone ? String(body.phone).trim() : null) : undefined;
+    const body     = await request.json();
+    const email    = body.email ? String(body.email).trim().toLowerCase() : undefined;
+    const phone    = body.phone !== undefined ? (body.phone ? String(body.phone).trim() : null) : undefined;
+    const birthdayStr = body.birthday !== undefined ? (body.birthday ? String(body.birthday).trim() : null) : undefined;
 
     if (email !== undefined) {
       if (!email) return NextResponse.json({ error: "Email cannot be empty." }, { status: 400 });
@@ -25,7 +26,24 @@ export async function PATCH(request: Request) {
       if (conflict) return NextResponse.json({ error: "That email is already in use." }, { status: 409 });
     }
 
-    const updated = await prisma.user.update({
+    let birthday: Date | null | undefined = undefined;
+    if (birthdayStr !== undefined) {
+      if (birthdayStr === null) {
+        birthday = null;
+      } else {
+        birthday = new Date(birthdayStr);
+        if (isNaN(birthday.getTime()) || birthday > new Date()) {
+          return NextResponse.json({ error: "Invalid birthday." }, { status: 400 });
+        }
+      }
+    }
+
+    if (birthday !== undefined) {
+      const profile = await prisma.memberProfile.findUnique({ where: { userId } });
+      if (!profile) return NextResponse.json({ error: "No member profile found." }, { status: 400 });
+    }
+
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data:  {
         ...(email !== undefined && { email }),
@@ -34,7 +52,16 @@ export async function PATCH(request: Request) {
       select: { email: true, phone: true },
     });
 
-    return NextResponse.json({ ok: true, email: updated.email, phone: updated.phone });
+    if (birthday !== undefined) {
+      await prisma.memberProfile.update({ where: { userId }, data: { birthday } });
+    }
+
+    return NextResponse.json({
+      ok:       true,
+      email:    updatedUser.email,
+      phone:    updatedUser.phone,
+      birthday: birthday !== undefined ? birthday?.toISOString().slice(0, 10) ?? null : undefined,
+    });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: e instanceof Error ? e.message : "Server error" }, { status: 500 });

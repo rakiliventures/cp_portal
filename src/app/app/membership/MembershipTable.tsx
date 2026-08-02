@@ -17,6 +17,8 @@ export type SerializedMember = {
   mentorId:        string | null;
   mentorName:      string | null;
   joinDate:        string | null;
+  birthday:        string | null;
+  birthdayIso:     string | null;
   cpKittyBalance:  number;
   welfareBalance:  number;
   hasArrears:      boolean;
@@ -102,6 +104,7 @@ function MemberDetailsModal({
             <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
               <Row label="Workgroup"   value={member.workgroupName} />
               <Row label="Joined"      value={member.joinDate} />
+              <Row label="Birthday"    value={member.birthday} />
               <Row label="Mentor"      value={member.mentorName} />
             </div>
           </div>
@@ -204,8 +207,11 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
   const [phone,       setPhone]       = useState(member.phone ?? "");
   const [workgroupId, setWorkgroupId] = useState(member.workgroupId ?? "");
   const [mentorId,    setMentorId]    = useState(member.mentorId ?? "");
+  const [birthday,    setBirthday]    = useState(member.birthdayIso ?? "");
   const [saving,      setSaving]      = useState(false);
   const [error,       setError]       = useState("");
+
+  const today = new Date().toISOString().slice(0, 10);
 
   const potentialMentors = members.filter((m) => m.id !== member.id);
 
@@ -223,6 +229,7 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
           phone:       phone.trim() || null,
           workgroupId,
           mentorId:    mentorId || null,
+          birthday:    birthday || null,
         }),
       });
       if (res.ok) {
@@ -309,6 +316,15 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
+            </div>
+
+            {/* Birthday */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Birthday <span className="text-slate-400 font-normal">(optional)</span>
+              </label>
+              <input type="date" value={birthday} onChange={(e) => setBirthday(e.target.value)} max={today}
+                className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
 
             <ErrorToast message={error} onClose={() => setError("")} />

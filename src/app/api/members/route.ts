@@ -37,6 +37,7 @@ export async function POST(request: Request) {
     const mentorId      = body.mentorId ? String(body.mentorId).trim() : null;
     const joinDateStr   = body.joinDate ? String(body.joinDate).trim() : null;
     const preferredName = body.preferredName ? String(body.preferredName).trim() : null;
+    const birthdayStr   = body.birthday ? String(body.birthday).trim() : null;
 
     if (!name)        return NextResponse.json({ error: "Name is required." }, { status: 400 });
     if (!email)       return NextResponse.json({ error: "Email is required." }, { status: 400 });
@@ -45,6 +46,14 @@ export async function POST(request: Request) {
     const joinDate = joinDateStr ? new Date(joinDateStr) : new Date();
     if (isNaN(joinDate.getTime())) {
       return NextResponse.json({ error: "Invalid join date." }, { status: 400 });
+    }
+
+    let birthday: Date | null = null;
+    if (birthdayStr) {
+      birthday = new Date(birthdayStr);
+      if (isNaN(birthday.getTime())) {
+        return NextResponse.json({ error: "Invalid birthday." }, { status: 400 });
+      }
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -79,6 +88,7 @@ export async function POST(request: Request) {
               joinDate,
               mentorId: mentorId || null,
               preferredName: preferredName || null,
+              birthday: birthday,
             },
           },
         },

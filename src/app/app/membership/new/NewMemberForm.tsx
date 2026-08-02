@@ -27,6 +27,7 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
     mentorId:      "",
     joinDate:      today,
     preferredName: "",
+    birthday:      "",
   });
   const [errors, setErrors]   = useState<FieldError>({});
   const [apiError, setApiError] = useState("");
@@ -68,6 +69,7 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
           mentorId:      form.mentorId || null,
           joinDate:      form.joinDate,
           preferredName: form.preferredName.trim() || null,
+          birthday:      form.birthday || null,
         }),
       });
       const data = await res.json();
@@ -152,6 +154,20 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <p className="mt-1 text-xs text-slate-400">WhatsApp welcome message will be sent here.</p>
+          </div>
+
+          {/* Birthday */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Birthday <span className="text-slate-400 font-normal">(optional)</span>
+            </label>
+            <input
+              type="date"
+              value={form.birthday}
+              onChange={set("birthday")}
+              max={today}
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+            />
           </div>
         </div>
       </div>
