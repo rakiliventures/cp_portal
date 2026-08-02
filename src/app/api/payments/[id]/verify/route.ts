@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
@@ -30,6 +30,6 @@ export async function PATCH(
     where: { id },
     data: { verified: true, verifiedById, verifiedAt: new Date() },
   });
-  notifyPaymentVerified(id).catch(console.error);
+  after(() => notifyPaymentVerified(id).catch(console.error));
   return NextResponse.json({ ok: true });
 }

@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
@@ -61,8 +61,8 @@ export async function POST(request: Request) {
     const payment = await prisma.payment.create({
       data: { mpesaCode, datePaid, amount, accountId, memberId, payeeName, createdById },
     });
-    // Fire notification after responding — does not block the API
-    notifyPaymentCaptured(payment.id).catch(console.error);
+    // Fire notification after responding, but keep the function alive until it completes
+    after(() => notifyPaymentCaptured(payment.id).catch(console.error));
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error(e);

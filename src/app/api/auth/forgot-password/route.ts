@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { randomBytes, createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { notifyPasswordReset } from "@/lib/notify";
@@ -38,8 +38,10 @@ export async function POST(request: Request) {
     const baseUrl = process.env.NEXTAUTH_URL ?? "https://cp-olqp.vercel.app";
     const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
 
-    notifyPasswordReset(user.id, resetUrl).catch((e) =>
-      console.error("[forgot-password] notify failed:", e)
+    after(() =>
+      notifyPasswordReset(user.id, resetUrl).catch((e) =>
+        console.error("[forgot-password] notify failed:", e)
+      )
     );
 
     return genericResponse;
