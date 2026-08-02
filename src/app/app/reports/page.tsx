@@ -1,3 +1,7 @@
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/auth";
+import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { getMemberBalances } from "@/lib/invoicing";
 
@@ -94,6 +98,15 @@ function StatCard({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function ReportsPage() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) redirect("/login?callbackUrl=/app/reports");
+
+  const isSuperAdmin = !!(session.user as { isSuperAdmin?: boolean }).isSuperAdmin;
+  const modules = (session.user as { modules?: ModuleAssignment[] }).modules;
+  if (!canAccessModule(modules, isSuperAdmin, MODULE_CODES.GROUP_WIDE_REPORTS, "view")) {
+    redirect("/app/dashboard");
+  }
+
   const currentYear = new Date().getFullYear();
   const prevYear    = currentYear - 1;
   const yearStart   = new Date(`${currentYear}-01-01`);

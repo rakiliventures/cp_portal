@@ -1,8 +1,21 @@
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/auth";
+import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { NewMemberForm } from "./NewMemberForm";
 
 export default async function NewMemberPage() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) redirect("/login?callbackUrl=/app/membership/new");
+
+  const isSuperAdmin = !!(session.user as { isSuperAdmin?: boolean }).isSuperAdmin;
+  const modules = (session.user as { modules?: ModuleAssignment[] }).modules;
+  if (!canAccessModule(modules, isSuperAdmin, MODULE_CODES.MEMBERSHIP, "create")) {
+    redirect("/app/membership");
+  }
+
   const [workgroups, members] = await Promise.all([
     prisma.workgroup.findMany({
       where:   { status: "active" },
