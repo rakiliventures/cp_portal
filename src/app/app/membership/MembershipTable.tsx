@@ -2,9 +2,9 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { ErrorToast } from "@/components/ui/ErrorToast";
+import { BirthdayFields } from "@/components/ui/BirthdayFields";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
-import { calculateAge, MIN_MEMBER_AGE } from "@/lib/age";
 
 export type SerializedMember = {
   id:              string;
@@ -19,7 +19,8 @@ export type SerializedMember = {
   mentorName:      string | null;
   joinDate:        string | null;
   birthday:        string | null;
-  birthdayIso:     string | null;
+  birthdayDay:     number | null;
+  birthdayMonth:   number | null;
   dateCommissioned:    string | null;
   dateCommissionedIso: string | null;
   cpKittyBalance:  number;
@@ -211,7 +212,8 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
   const [phone,       setPhone]       = useState(member.phone ?? "");
   const [workgroupId, setWorkgroupId] = useState(member.workgroupId ?? "");
   const [mentorId,    setMentorId]    = useState(member.mentorId ?? "");
-  const [birthday,    setBirthday]    = useState(member.birthdayIso ?? "");
+  const [birthdayDay,   setBirthdayDay]   = useState<number | null>(member.birthdayDay);
+  const [birthdayMonth, setBirthdayMonth] = useState<number | null>(member.birthdayMonth);
   const [dateCommissioned, setDateCommissioned] = useState(member.dateCommissionedIso ?? "");
   const [saving,      setSaving]      = useState(false);
   const [error,       setError]       = useState("");
@@ -223,10 +225,6 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (birthday && calculateAge(new Date(birthday)) < MIN_MEMBER_AGE) {
-      setError(`Member must be at least ${MIN_MEMBER_AGE} years old.`);
-      return;
-    }
     setSaving(true);
     try {
       const res = await fetch(`/api/members/${member.id}`, {
@@ -238,7 +236,8 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
           phone:       phone.trim() || null,
           workgroupId,
           mentorId:    mentorId || null,
-          birthday:    birthday || null,
+          birthdayDay,
+          birthdayMonth,
           dateCommissioned: dateCommissioned || null,
         }),
       });
@@ -331,10 +330,9 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
             {/* Birthday */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Birthday <span className="text-slate-400 font-normal">(optional)</span>
+                Birthday <span className="text-slate-400 font-normal">(optional, day &amp; month only)</span>
               </label>
-              <input type="date" value={birthday} onChange={(e) => setBirthday(e.target.value)} max={today}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
+              <BirthdayFields day={birthdayDay} month={birthdayMonth} onChange={(m, d) => { setBirthdayMonth(m); setBirthdayDay(d); }} />
             </div>
 
             {/* Date commissioned */}
@@ -598,7 +596,8 @@ export function MembershipTable({ members, workgroups, canCreate, canEdit, atten
       "Phone":        m.phone ?? "—",
       "Workgroup":    m.workgroupName ?? "—",
       "Mentor":       m.mentorName ?? "—",
-      "Joined":       m.joinDate ?? "—",
+      "Date Commissioned": m.dateCommissioned ?? "—",
+      "Birthday":     m.birthday ?? "—",
       "CP Kitty Bal": m.cpKittyBalance,
       "Welfare Bal":  m.welfareBalance,
       "Has Arrears":  m.hasArrears ? "Yes" : "No",
@@ -814,7 +813,8 @@ export function MembershipTable({ members, workgroups, canCreate, canEdit, atten
               <tr className="border-b border-slate-200 bg-slate-50">
                 <th className="px-4 py-3 font-semibold text-slate-700">Name</th>
                 <th className="px-4 py-3 font-semibold text-slate-700">Workgroup</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Joined</th>
+                <th className="px-4 py-3 font-semibold text-slate-700">Date Commissioned</th>
+                <th className="px-4 py-3 font-semibold text-slate-700">Birthday</th>
                 {showDeactivatedAt && (
                   <th className="px-4 py-3 font-semibold text-slate-700">Deactivated On</th>
                 )}
@@ -826,7 +826,7 @@ export function MembershipTable({ members, workgroups, canCreate, canEdit, atten
             <tbody>
               {paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={showDeactivatedAt ? 7 : 6} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={showDeactivatedAt ? 8 : 7} className="px-4 py-8 text-center text-slate-500">
                     {hasActiveFilter ? "No members match the current filters." : "No members found."}
                   </td>
                 </tr>
@@ -845,7 +845,8 @@ export function MembershipTable({ members, workgroups, canCreate, canEdit, atten
                       )}
                     </td>
                     <td className="px-4 py-3 text-slate-600">{m.workgroupName ?? "—"}</td>
-                    <td className="px-4 py-3 text-slate-600">{m.joinDate ?? "—"}</td>
+                    <td className="px-4 py-3 text-slate-600">{m.dateCommissioned ?? "—"}</td>
+                    <td className="px-4 py-3 text-slate-600">{m.birthday ?? "—"}</td>
                     {showDeactivatedAt && (
                       <td className="px-4 py-3 text-slate-600">{m.deactivatedAt ?? "—"}</td>
                     )}

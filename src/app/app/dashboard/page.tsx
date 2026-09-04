@@ -431,7 +431,8 @@ export default async function DashboardPage() {
           <ContactCard
             email={user.email}
             phone={user.phone ?? null}
-            birthday={profile?.birthday ? new Date(profile.birthday).toISOString().slice(0, 10) : null}
+            birthdayDay={profile?.birthdayDay ?? null}
+            birthdayMonth={profile?.birthdayMonth ?? null}
           />
 
         </div>

@@ -3,42 +3,41 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorToast } from "@/components/ui/ErrorToast";
-import { calculateAge, MIN_MEMBER_AGE } from "@/lib/age";
+import { BirthdayFields } from "@/components/ui/BirthdayFields";
+import { formatMonthDay } from "@/lib/birthday";
 
 type Props = {
-  email: string;
-  phone: string | null;
-  birthday: string | null; // ISO yyyy-mm-dd
+  email:         string;
+  phone:         string | null;
+  birthdayDay:   number | null;
+  birthdayMonth: number | null;
 };
 
-export function ContactCard({ email: initialEmail, phone: initialPhone, birthday: initialBirthday }: Props) {
+export function ContactCard({ email: initialEmail, phone: initialPhone, birthdayDay: initialBirthdayDay, birthdayMonth: initialBirthdayMonth }: Props) {
   const router = useRouter();
-  const today = new Date().toISOString().slice(0, 10);
   const [open,       setOpen]       = useState(false);
   const [email,      setEmail]      = useState(initialEmail);
   const [phone,      setPhone]      = useState(initialPhone ?? "");
-  const [birthday,   setBirthday]   = useState(initialBirthday ?? "");
+  const [birthdayDay,   setBirthdayDay]   = useState<number | null>(initialBirthdayDay);
+  const [birthdayMonth, setBirthdayMonth] = useState<number | null>(initialBirthdayMonth);
   const [saving,     setSaving]     = useState(false);
   const [error,      setError]      = useState("");
 
   // Displayed values (optimistic before save)
-  const [shownEmail,    setShownEmail]    = useState(initialEmail);
-  const [shownPhone,    setShownPhone]    = useState(initialPhone ?? "");
-  const [shownBirthday, setShownBirthday] = useState(initialBirthday ?? "");
+  const [shownEmail,         setShownEmail]         = useState(initialEmail);
+  const [shownPhone,         setShownPhone]         = useState(initialPhone ?? "");
+  const [shownBirthdayDay,   setShownBirthdayDay]   = useState(initialBirthdayDay);
+  const [shownBirthdayMonth, setShownBirthdayMonth] = useState(initialBirthdayMonth);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (birthday && calculateAge(new Date(birthday)) < MIN_MEMBER_AGE) {
-      setError(`Member must be at least ${MIN_MEMBER_AGE} years old.`);
-      return;
-    }
     setSaving(true);
     try {
       const res = await fetch("/api/profile", {
         method:  "PATCH",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ email: email.trim(), phone: phone.trim() || null, birthday: birthday || null }),
+        body:    JSON.stringify({ email: email.trim(), phone: phone.trim() || null, birthdayDay, birthdayMonth }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -48,7 +47,8 @@ export function ContactCard({ email: initialEmail, phone: initialPhone, birthday
       }
       setShownEmail(data.email);
       setShownPhone(data.phone ?? "");
-      setShownBirthday(data.birthday ?? "");
+      setShownBirthdayDay(data.birthdayDay ?? null);
+      setShownBirthdayMonth(data.birthdayMonth ?? null);
       setOpen(false);
       setSaving(false);
       router.refresh();
@@ -56,10 +56,6 @@ export function ContactCard({ email: initialEmail, phone: initialPhone, birthday
       setError("Network error. Please try again.");
       setSaving(false);
     }
-  }
-
-  function formatBirthday(iso: string): string {
-    return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   }
 
   return (
@@ -70,7 +66,7 @@ export function ContactCard({ email: initialEmail, phone: initialPhone, birthday
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Contacts</p>
           <button
             type="button"
-            onClick={() => { setEmail(shownEmail); setPhone(shownPhone); setBirthday(shownBirthday); setError(""); setOpen(true); }}
+            onClick={() => { setEmail(shownEmail); setPhone(shownPhone); setBirthdayDay(shownBirthdayDay); setBirthdayMonth(shownBirthdayMonth); setError(""); setOpen(true); }}
             className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
             title="Edit contact details"
           >
@@ -108,7 +104,7 @@ export function ContactCard({ email: initialEmail, phone: initialPhone, birthday
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
             </svg>
           </span>
-          <span className="text-sm text-slate-700">{shownBirthday ? formatBirthday(shownBirthday) : <span className="text-slate-400">—</span>}</span>
+          <span className="text-sm text-slate-700">{shownBirthdayDay && shownBirthdayMonth ? formatMonthDay(shownBirthdayMonth, shownBirthdayDay) : <span className="text-slate-400">—</span>}</span>
         </div>
       </div>
 
@@ -139,14 +135,8 @@ export function ContactCard({ email: initialEmail, phone: initialPhone, birthday
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Birthday <span className="text-slate-400 font-normal">(optional)</span></label>
-                <input
-                  type="date"
-                  value={birthday}
-                  onChange={(e) => setBirthday(e.target.value)}
-                  max={today}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+                <label className="block text-sm font-medium text-slate-700 mb-1">Birthday <span className="text-slate-400 font-normal">(optional, day &amp; month only)</span></label>
+                <BirthdayFields day={birthdayDay} month={birthdayMonth} onChange={(m, d) => { setBirthdayMonth(m); setBirthdayDay(d); }} />
               </div>
 
               <ErrorToast message={error} onClose={() => setError("")} />

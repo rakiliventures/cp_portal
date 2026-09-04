@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 const CP_KITTY_ACCOUNTS = ["CP_KITTY_ANNUAL", "CP_KITTY_MONTHLY", "MANUAL_CP_KITTY"] as const;
 const WELFARE_ACCOUNTS  = ["WELFARE_MONTHLY", "MANUAL_WELFARE"] as const;
 
+// CP Kitty annual dues resume being invoiced from this year onward (2026 and earlier were
+// wiped and are not re-billed). Welfare Kitty has no annual invoice — monthly only.
+const CP_KITTY_ANNUAL_START_YEAR = 2027;
+
 function toNum(value: unknown): number {
   if (value == null) return 0;
   if (typeof value === "number") return value;
@@ -33,8 +37,9 @@ export function buildInvoiceRecords(memberId: string, joinDate: Date): InvoiceRe
 
   const records: InvoiceRecord[] = [];
 
-  // CP Kitty Annual — 1 000 KES per calendar year, from join year to current year
-  for (let yr = joinYear; yr <= currentYear; yr++) {
+  // CP Kitty Annual — 1 000 KES per calendar year, from join year (or the resume year,
+  // whichever is later) to current year
+  for (let yr = Math.max(joinYear, CP_KITTY_ANNUAL_START_YEAR); yr <= currentYear; yr++) {
     records.push({ memberId, type: "CP_KITTY_ANNUAL", yearOrMonth: String(yr), amountExpected: 1000 });
   }
 
