@@ -81,11 +81,12 @@ export function getMenuModules(modules: ModuleAssignment[] | undefined, isSuperA
     items.push({ type: "group", label: "Finance", children: financeChildren });
   }
 
+  // User Management is superadmin-only, regardless of any module assignment.
   const settingsChildren = [
     { code: MODULE_CODES.NOTIFICATIONS_SETTINGS, label: "Notifications Settings", href: "/app/notifications-settings" },
-    { code: MODULE_CODES.USER_MANAGEMENT, label: "User Management", href: "/app/user-management" },
+    ...(isSuperAdmin ? [{ code: MODULE_CODES.USER_MANAGEMENT, label: "User Management", href: "/app/user-management" }] : []),
     { code: MODULE_CODES.PAYMENT_ACCOUNTS, label: "Payment Accounts", href: "/app/payment-accounts" },
-  ].filter((c) => hasAccess(c.code));
+  ].filter((c) => c.code === MODULE_CODES.USER_MANAGEMENT || hasAccess(c.code));
 
   if (settingsChildren.length > 0) {
     items.push({ type: "group", label: "Settings", children: settingsChildren });

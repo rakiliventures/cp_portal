@@ -59,7 +59,8 @@ model User {
   notificationLogs     NotificationLog[]
   actionedInquiries    MembershipInquiry[]
   downloadableDocuments DownloadableDocument[]
-  financialAccounts    FinancialAccount[]
+  financialAccounts    FinancialAccount[]  @relation("FinancialAccountMember")
+  financialAccountsCreated FinancialAccount[] @relation("FinancialAccountCreatedBy")
   attendanceRecordedBy  EventAttendance[]   @relation("AttendanceRecordedBy")
   workgroupHistoryRecorded MemberWorkgroupHistory[] @relation("WorkgroupHistoryRecordedBy")
   moduleAssignmentsGiven UserModuleAssignment[] @relation("AssignmentsGivenBy")
@@ -138,13 +139,15 @@ model UserModuleAssignment {
 model FinancialAccount {
   id            String   @id @default(cuid())
   memberId      String   @map("member_id")
-  member        User     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member        User     @relation("FinancialAccountMember", fields: [memberId], references: [id], onDelete: Cascade)
   type          String   // CP_KITTY_ANNUAL | CP_KITTY_MONTHLY | WELFARE_MONTHLY | MANUAL_CP_KITTY | MANUAL_WELFARE
   yearOrMonth   String   @map("year_or_month")
   amountExpected Decimal @map("amount_expected") @db.Decimal(12, 2)
   amountPaid    Decimal  @default(0) @map("amount_paid") @db.Decimal(12, 2)
   dueDate       DateTime? @map("due_date")
   notes         String?
+  createdById   String?  @map("created_by_id") // null = system-generated (auto dues); set = admin who added a manual entry
+  createdBy     User?    @relation("FinancialAccountCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@unique([memberId, type, yearOrMonth])
