@@ -85,10 +85,12 @@ model MemberProfile {
   workgroupId   String    @map("workgroup_id")
   workgroup     Workgroup @relation(fields: [workgroupId], references: [id])
   joinDate      DateTime  @map("join_date")
+  invoiceStartDate DateTime @map("invoice_start_date") @db.Date
   mentorId      String?   @map("mentor_id")
   mentor        User?     @relation("Mentor", fields: [mentorId], references: [id])
   preferredName String?   @map("preferred_name")
-  birthday      DateTime? @db.Date
+  birthdayDay   Int?      @map("birthday_day")
+  birthdayMonth Int?      @map("birthday_month")
   dateCommissioned DateTime? @map("date_commissioned") @db.Date
 }
 

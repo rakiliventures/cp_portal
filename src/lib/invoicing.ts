@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 const CP_KITTY_ACCOUNTS = ["CP_KITTY_ANNUAL", "CP_KITTY_MONTHLY", "MANUAL_CP_KITTY"] as const;
 const WELFARE_ACCOUNTS  = ["WELFARE_MONTHLY", "MANUAL_WELFARE"] as const;
 
+// CP Kitty annual dues resume being invoiced from this year onward (2026 and earlier were
+// wiped and are not re-billed). Welfare Kitty has no annual invoice — monthly only.
+const CP_KITTY_ANNUAL_START_YEAR = 2027;
+
 function toNum(value: unknown): number {
   if (value == null) return 0;
   if (typeof value === "number") return value;
@@ -23,39 +27,49 @@ type InvoiceRecord = {
   amountExpected: number;
 };
 
-/** Builds all invoice records a member should have, from joinDate up to and including today. */
-export function buildInvoiceRecords(memberId: string, joinDate: Date): InvoiceRecord[] {
+/**
+ * Builds all invoice records a member should have, from invoiceStartDate up to and including
+ * today. Never produces a monthly (CP Kitty/Welfare) record before invoiceStartDate, and never
+ * anything for a future invoiceStartDate. The CP Kitty annual fee is the one exception: it is
+ * always gated by CP_KITTY_ANNUAL_START_YEAR (2027) rather than the member's own start date.
+ */
+export function buildInvoiceRecords(memberId: string, invoiceStartDate: Date): InvoiceRecord[] {
   const today        = new Date();
   const currentYear  = today.getFullYear();
   const currentMonth = today.getMonth(); // 0-indexed
-  const joinYear     = joinDate.getFullYear();
-  const joinMonth    = joinDate.getMonth(); // 0-indexed
+  const startYear    = invoiceStartDate.getFullYear();
+  const startMonth   = invoiceStartDate.getMonth(); // 0-indexed
 
   const records: InvoiceRecord[] = [];
 
-  // CP Kitty Annual — 1 000 KES per calendar year, from join year to current year
-  for (let yr = joinYear; yr <= currentYear; yr++) {
+  // CP Kitty Annual — 1 000 KES per calendar year, from invoice-start year (or the resume
+  // year, whichever is later) to current year
+  for (let yr = Math.max(startYear, CP_KITTY_ANNUAL_START_YEAR); yr <= currentYear; yr++) {
     records.push({ memberId, type: "CP_KITTY_ANNUAL", yearOrMonth: String(yr), amountExpected: 1000 });
   }
 
-  // CP Kitty Monthly + Welfare Monthly — 300 KES each, from join month to current month
-  let y = joinYear;
-  let m = joinMonth;
-  for (;;) {
-    const ym = `${y}-${String(m + 1).padStart(2, "0")}`;
-    records.push({ memberId, type: "CP_KITTY_MONTHLY",  yearOrMonth: ym, amountExpected: 300 });
-    records.push({ memberId, type: "WELFARE_MONTHLY",   yearOrMonth: ym, amountExpected: 300 });
-    if (y === currentYear && m === currentMonth) break;
-    m++;
-    if (m > 11) { m = 0; y++; }
+  // CP Kitty Monthly + Welfare Monthly — 300 KES each, from invoice-start month to current
+  // month. Nothing is generated if invoiceStartDate is still in the future.
+  const startIsPastOrCurrent = startYear < currentYear || (startYear === currentYear && startMonth <= currentMonth);
+  if (startIsPastOrCurrent) {
+    let y = startYear;
+    let m = startMonth;
+    for (;;) {
+      const ym = `${y}-${String(m + 1).padStart(2, "0")}`;
+      records.push({ memberId, type: "CP_KITTY_MONTHLY",  yearOrMonth: ym, amountExpected: 300 });
+      records.push({ memberId, type: "WELFARE_MONTHLY",   yearOrMonth: ym, amountExpected: 300 });
+      if (y === currentYear && m === currentMonth) break;
+      m++;
+      if (m > 11) { m = 0; y++; }
+    }
   }
 
   return records;
 }
 
 /** Idempotently generates all missing auto-invoices for a single member. */
-export async function generateMemberInvoices(memberId: string, joinDate: Date): Promise<void> {
-  const expected = buildInvoiceRecords(memberId, joinDate);
+export async function generateMemberInvoices(memberId: string, invoiceStartDate: Date): Promise<void> {
+  const expected = buildInvoiceRecords(memberId, invoiceStartDate);
 
   const existing = await prisma.financialAccount.findMany({
     where: {
@@ -77,14 +91,14 @@ export async function generateMemberInvoices(memberId: string, joinDate: Date): 
 export async function generateAllInvoices(): Promise<void> {
   const members = await prisma.memberProfile.findMany({
     where:  { user: { status: "Active" } },
-    select: { userId: true, joinDate: true },
+    select: { userId: true, invoiceStartDate: true },
   });
 
   if (members.length === 0) return;
 
   const allExpected: InvoiceRecord[] = [];
   for (const mp of members) {
-    allExpected.push(...buildInvoiceRecords(mp.userId, mp.joinDate));
+    allExpected.push(...buildInvoiceRecords(mp.userId, mp.invoiceStartDate));
   }
 
   const existing = await prisma.financialAccount.findMany({

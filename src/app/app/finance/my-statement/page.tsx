@@ -35,8 +35,8 @@ function invoiceDescription(type: string, yearOrMonth: string): string {
     const prefix = type === "WELFARE_MONTHLY" ? "Welfare Monthly Contribution" : "Monthly Contribution";
     return `${prefix} — ${label} ${yr}`;
   }
-  if (type === "MANUAL_CP_KITTY") return "Manual CP Kitty Invoice";
-  if (type === "MANUAL_WELFARE")  return "Manual Welfare Invoice";
+  if (type === "MANUAL_CP_KITTY") return "Manual CP Kitty Entry";
+  if (type === "MANUAL_WELFARE")  return "Manual Welfare Entry";
   return "Invoice";
 }
 
@@ -114,15 +114,20 @@ export default async function MyStatementPage() {
   // ── Build statement rows ─────────────────────────────────────────
   type RowWithSort = StatementRow & { sortKey: string };
 
-  const invoiceRows: RowWithSort[] = financialAccounts.map((acc) => ({
-    key:         `inv-${acc.id}`,
-    sortKey:     invoiceSortDate(acc.type, acc.yearOrMonth),
-    dateLabel:   invoiceDateLabel(acc.type, acc.yearOrMonth),
-    description: invoiceDescription(acc.type, acc.yearOrMonth),
-    account:     CP_KITTY_TYPES.includes(acc.type) ? "CP Kitty" : "Welfare",
-    debit:       toNum(acc.amountExpected),
-    credit:      0,
-  }));
+  const invoiceRows: RowWithSort[] = financialAccounts.map((acc) => {
+    const expected = toNum(acc.amountExpected);
+    return {
+      key:         `inv-${acc.id}`,
+      sortKey:     invoiceSortDate(acc.type, acc.yearOrMonth),
+      dateLabel:   invoiceDateLabel(acc.type, acc.yearOrMonth),
+      description: acc.notes?.trim() || invoiceDescription(acc.type, acc.yearOrMonth),
+      account:     CP_KITTY_TYPES.includes(acc.type) ? "CP Kitty" : "Welfare",
+      // A negative amountExpected is a manual credit (e.g. an overpayment/opening
+      // balance) — it belongs in the Paid column, not a negative Invoiced amount.
+      debit:       Math.max(expected, 0),
+      credit:      Math.max(-expected, 0),
+    };
+  });
 
   const paymentRows: RowWithSort[] = memberPayments.map((pay) => ({
     key:         `pay-${pay.id}`,

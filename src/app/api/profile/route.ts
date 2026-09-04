@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { calculateAge, MIN_MEMBER_AGE } from "@/lib/age";
+import { isValidMonthDay } from "@/lib/birthday";
 
 export async function PATCH(request: Request) {
   const session = await getServerSession(authOptions);
@@ -16,7 +16,8 @@ export async function PATCH(request: Request) {
     const body     = await request.json();
     const email    = body.email ? String(body.email).trim().toLowerCase() : undefined;
     const phone    = body.phone !== undefined ? (body.phone ? String(body.phone).trim() : null) : undefined;
-    const birthdayStr = body.birthday !== undefined ? (body.birthday ? String(body.birthday).trim() : null) : undefined;
+    const birthdayDayRaw   = body.birthdayDay !== undefined ? body.birthdayDay : undefined;
+    const birthdayMonthRaw = body.birthdayMonth !== undefined ? body.birthdayMonth : undefined;
 
     if (email !== undefined) {
       if (!email) return NextResponse.json({ error: "Email cannot be empty." }, { status: 400 });
@@ -27,22 +28,20 @@ export async function PATCH(request: Request) {
       if (conflict) return NextResponse.json({ error: "That email is already in use." }, { status: 409 });
     }
 
-    let birthday: Date | null | undefined = undefined;
-    if (birthdayStr !== undefined) {
-      if (birthdayStr === null) {
-        birthday = null;
-      } else {
-        birthday = new Date(birthdayStr);
-        if (isNaN(birthday.getTime()) || birthday > new Date()) {
-          return NextResponse.json({ error: "Invalid birthday." }, { status: 400 });
-        }
-        if (calculateAge(birthday) < MIN_MEMBER_AGE) {
-          return NextResponse.json({ error: `A member must be at least ${MIN_MEMBER_AGE} years old.` }, { status: 400 });
-        }
+    let birthdayDay:   number | null | undefined = undefined;
+    let birthdayMonth: number | null | undefined = undefined;
+    if (birthdayDayRaw !== undefined || birthdayMonthRaw !== undefined) {
+      birthdayDay   = birthdayDayRaw   === null || birthdayDayRaw   === undefined ? null : Number(birthdayDayRaw);
+      birthdayMonth = birthdayMonthRaw === null || birthdayMonthRaw === undefined ? null : Number(birthdayMonthRaw);
+      if ((birthdayDay === null) !== (birthdayMonth === null)) {
+        return NextResponse.json({ error: "Both day and month are required for birthday." }, { status: 400 });
+      }
+      if (birthdayDay !== null && birthdayMonth !== null && !isValidMonthDay(birthdayMonth, birthdayDay)) {
+        return NextResponse.json({ error: "Invalid birthday." }, { status: 400 });
       }
     }
 
-    if (birthday !== undefined) {
+    if (birthdayDay !== undefined) {
       const profile = await prisma.memberProfile.findUnique({ where: { userId } });
       if (!profile) return NextResponse.json({ error: "No member profile found." }, { status: 400 });
     }
@@ -56,15 +55,16 @@ export async function PATCH(request: Request) {
       select: { email: true, phone: true },
     });
 
-    if (birthday !== undefined) {
-      await prisma.memberProfile.update({ where: { userId }, data: { birthday } });
+    if (birthdayDay !== undefined) {
+      await prisma.memberProfile.update({ where: { userId }, data: { birthdayDay, birthdayMonth } });
     }
 
     return NextResponse.json({
-      ok:       true,
-      email:    updatedUser.email,
-      phone:    updatedUser.phone,
-      birthday: birthday !== undefined ? birthday?.toISOString().slice(0, 10) ?? null : undefined,
+      ok:            true,
+      email:         updatedUser.email,
+      phone:         updatedUser.phone,
+      birthdayDay:   birthdayDay !== undefined ? birthdayDay : undefined,
+      birthdayMonth: birthdayMonth !== undefined ? birthdayMonth : undefined,
     });
   } catch (e) {
     console.error(e);

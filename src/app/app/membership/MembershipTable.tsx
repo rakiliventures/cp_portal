@@ -2,9 +2,9 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { ErrorToast } from "@/components/ui/ErrorToast";
+import { BirthdayFields } from "@/components/ui/BirthdayFields";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
-import { calculateAge, MIN_MEMBER_AGE } from "@/lib/age";
 
 export type SerializedMember = {
   id:              string;
@@ -19,7 +19,8 @@ export type SerializedMember = {
   mentorName:      string | null;
   joinDate:        string | null;
   birthday:        string | null;
-  birthdayIso:     string | null;
+  birthdayDay:     number | null;
+  birthdayMonth:   number | null;
   dateCommissioned:    string | null;
   dateCommissionedIso: string | null;
   cpKittyBalance:  number;
@@ -211,7 +212,8 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
   const [phone,       setPhone]       = useState(member.phone ?? "");
   const [workgroupId, setWorkgroupId] = useState(member.workgroupId ?? "");
   const [mentorId,    setMentorId]    = useState(member.mentorId ?? "");
-  const [birthday,    setBirthday]    = useState(member.birthdayIso ?? "");
+  const [birthdayDay,   setBirthdayDay]   = useState<number | null>(member.birthdayDay);
+  const [birthdayMonth, setBirthdayMonth] = useState<number | null>(member.birthdayMonth);
   const [dateCommissioned, setDateCommissioned] = useState(member.dateCommissionedIso ?? "");
   const [saving,      setSaving]      = useState(false);
   const [error,       setError]       = useState("");
@@ -223,10 +225,6 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (birthday && calculateAge(new Date(birthday)) < MIN_MEMBER_AGE) {
-      setError(`Member must be at least ${MIN_MEMBER_AGE} years old.`);
-      return;
-    }
     setSaving(true);
     try {
       const res = await fetch(`/api/members/${member.id}`, {
@@ -238,7 +236,8 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
           phone:       phone.trim() || null,
           workgroupId,
           mentorId:    mentorId || null,
-          birthday:    birthday || null,
+          birthdayDay,
+          birthdayMonth,
           dateCommissioned: dateCommissioned || null,
         }),
       });
@@ -331,10 +330,9 @@ function EditMemberModal({ member, workgroups, members, onClose, onSuccess }: Ed
             {/* Birthday */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Birthday <span className="text-slate-400 font-normal">(optional)</span>
+                Birthday <span className="text-slate-400 font-normal">(optional, day &amp; month only)</span>
               </label>
-              <input type="date" value={birthday} onChange={(e) => setBirthday(e.target.value)} max={today}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
+              <BirthdayFields day={birthdayDay} month={birthdayMonth} onChange={(m, d) => { setBirthdayMonth(m); setBirthdayDay(d); }} />
             </div>
 
             {/* Date commissioned */}
@@ -467,6 +465,7 @@ type InvoiceModalProps = {
 function InvoiceModal({ memberId, memberName, onClose, onSuccess }: InvoiceModalProps) {
   const [amount,     setAmount]     = useState("");
   const [type,       setType]       = useState<"CP_KITTY" | "WELFARE">("CP_KITTY");
+  const [kind,       setKind]       = useState<"DEBIT" | "CREDIT">("DEBIT");
   const [notes,      setNotes]      = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error,      setError]      = useState("");
@@ -481,7 +480,7 @@ function InvoiceModal({ memberId, memberName, onClose, onSuccess }: InvoiceModal
       const res = await fetch(`/api/members/${memberId}/invoices`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ amount: num, type, notes: notes.trim() || undefined }),
+        body:    JSON.stringify({ amount: num, type, kind, notes: notes.trim() || undefined }),
       });
       if (res.ok) {
         onSuccess();
@@ -503,6 +502,25 @@ function InvoiceModal({ memberId, memberName, onClose, onSuccess }: InvoiceModal
         <p className="mt-0.5 text-sm text-slate-500">{memberName}</p>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Entry type</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setKind("DEBIT")}
+                className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
+                  kind === "DEBIT" ? "border-primary bg-primary/10 text-primary" : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                }`}>
+                Debit
+                <span className="block text-[11px] font-normal text-slate-400">Adds to dues owed</span>
+              </button>
+              <button type="button" onClick={() => setKind("CREDIT")}
+                className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
+                  kind === "CREDIT" ? "border-primary bg-primary/10 text-primary" : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                }`}>
+                Credit
+                <span className="block text-[11px] font-normal text-slate-400">Overpayment / reduces dues</span>
+              </button>
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Amount (KES)</label>
             <input type="number" min="1" step="1" placeholder="e.g. 5000" value={amount}
@@ -533,7 +551,7 @@ function InvoiceModal({ memberId, memberName, onClose, onSuccess }: InvoiceModal
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                 </svg>
               )}
-              {submitting ? "Saving…" : "Add invoice"}
+              {submitting ? "Saving…" : kind === "CREDIT" ? "Add credit" : "Add invoice"}
             </button>
             <button type="button" onClick={onClose} disabled={submitting}
               className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">
@@ -598,7 +616,8 @@ export function MembershipTable({ members, workgroups, canCreate, canEdit, atten
       "Phone":        m.phone ?? "—",
       "Workgroup":    m.workgroupName ?? "—",
       "Mentor":       m.mentorName ?? "—",
-      "Joined":       m.joinDate ?? "—",
+      "Date Commissioned": m.dateCommissioned ?? "—",
+      "Birthday":     m.birthday ?? "—",
       "CP Kitty Bal": m.cpKittyBalance,
       "Welfare Bal":  m.welfareBalance,
       "Has Arrears":  m.hasArrears ? "Yes" : "No",
@@ -814,7 +833,8 @@ export function MembershipTable({ members, workgroups, canCreate, canEdit, atten
               <tr className="border-b border-slate-200 bg-slate-50">
                 <th className="px-4 py-3 font-semibold text-slate-700">Name</th>
                 <th className="px-4 py-3 font-semibold text-slate-700">Workgroup</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Joined</th>
+                <th className="px-4 py-3 font-semibold text-slate-700">Date Commissioned</th>
+                <th className="px-4 py-3 font-semibold text-slate-700">Birthday</th>
                 {showDeactivatedAt && (
                   <th className="px-4 py-3 font-semibold text-slate-700">Deactivated On</th>
                 )}
@@ -826,7 +846,7 @@ export function MembershipTable({ members, workgroups, canCreate, canEdit, atten
             <tbody>
               {paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={showDeactivatedAt ? 7 : 6} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={showDeactivatedAt ? 8 : 7} className="px-4 py-8 text-center text-slate-500">
                     {hasActiveFilter ? "No members match the current filters." : "No members found."}
                   </td>
                 </tr>
@@ -845,7 +865,8 @@ export function MembershipTable({ members, workgroups, canCreate, canEdit, atten
                       )}
                     </td>
                     <td className="px-4 py-3 text-slate-600">{m.workgroupName ?? "—"}</td>
-                    <td className="px-4 py-3 text-slate-600">{m.joinDate ?? "—"}</td>
+                    <td className="px-4 py-3 text-slate-600">{m.dateCommissioned ?? "—"}</td>
+                    <td className="px-4 py-3 text-slate-600">{m.birthday ?? "—"}</td>
                     {showDeactivatedAt && (
                       <td className="px-4 py-3 text-slate-600">{m.deactivatedAt ?? "—"}</td>
                     )}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorToast } from "@/components/ui/ErrorToast";
-import { calculateAge, MIN_MEMBER_AGE } from "@/lib/age";
+import { BirthdayFields } from "@/components/ui/BirthdayFields";
 
 type Workgroup = { id: string; abbreviation: string; name: string };
 type Mentor    = { id: string; name: string | null; workgroupName: string | null };
@@ -27,10 +27,12 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
     workgroupId:   "",
     mentorId:      "",
     joinDate:      today,
+    invoiceStartDate: today,
     preferredName: "",
-    birthday:      "",
     dateCommissioned: "",
   });
+  const [birthdayDay,   setBirthdayDay]   = useState<number | null>(null);
+  const [birthdayMonth, setBirthdayMonth] = useState<number | null>(null);
   const [errors, setErrors]   = useState<FieldError>({});
   const [apiError, setApiError] = useState("");
   const [loading, setLoading]   = useState(false);
@@ -49,9 +51,7 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address.";
     if (!form.workgroupId)        errs.workgroupId = "Workgroup is required.";
     if (!form.joinDate)           errs.joinDate    = "Join date is required.";
-    if (form.birthday && calculateAge(new Date(form.birthday)) < MIN_MEMBER_AGE) {
-      errs.birthday = `Member must be at least ${MIN_MEMBER_AGE} years old.`;
-    }
+    if (!form.invoiceStartDate)   errs.invoiceStartDate = "Invoice start date is required.";
     return errs;
   }
 
@@ -73,8 +73,10 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
           workgroupId:   form.workgroupId,
           mentorId:      form.mentorId || null,
           joinDate:      form.joinDate,
+          invoiceStartDate: form.invoiceStartDate,
           preferredName: form.preferredName.trim() || null,
-          birthday:      form.birthday || null,
+          birthdayDay,
+          birthdayMonth,
           dateCommissioned: form.dateCommissioned || null,
         }),
       });
@@ -165,18 +167,9 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
           {/* Birthday */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Birthday <span className="text-slate-400 font-normal">(optional)</span>
+              Birthday <span className="text-slate-400 font-normal">(optional, day &amp; month only)</span>
             </label>
-            <input
-              type="date"
-              value={form.birthday}
-              onChange={set("birthday")}
-              max={today}
-              className={`w-full rounded-xl border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
-                errors.birthday ? "border-red-400 bg-red-50" : "border-slate-300 bg-white focus:border-primary"
-              }`}
-            />
-            {errors.birthday && <p className="mt-1 text-xs text-red-600">{errors.birthday}</p>}
+            <BirthdayFields day={birthdayDay} month={birthdayMonth} onChange={(m, d) => { setBirthdayMonth(m); setBirthdayDay(d); }} />
           </div>
         </div>
       </div>
@@ -237,6 +230,23 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
               max={today}
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
+          </div>
+
+          {/* Invoice start date */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Invoice start date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={form.invoiceStartDate}
+              onChange={set("invoiceStartDate")}
+              className={`w-full rounded-xl border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
+                errors.invoiceStartDate ? "border-red-400 bg-red-50" : "border-slate-300 bg-white focus:border-primary"
+              }`}
+            />
+            {errors.invoiceStartDate && <p className="mt-1 text-xs text-red-600">{errors.invoiceStartDate}</p>}
+            <p className="mt-1 text-xs text-slate-400">The month CP Kitty &amp; Welfare dues start being invoiced from.</p>
           </div>
 
           {/* Mentor */}

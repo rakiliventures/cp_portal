@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { generateAllInvoices, getMemberBalances } from "@/lib/invoicing";
+import { formatMonthDay } from "@/lib/birthday";
 
 export async function fetchMemberPageData(statusFilter: "Active" | "Paused") {
   if (statusFilter === "Active") {
@@ -102,14 +103,11 @@ export async function fetchMemberPageData(statusFilter: "Active" | "Paused") {
             day: "numeric", month: "short", year: "numeric",
           })
         : null,
-      birthday:        u.memberProfile?.birthday
-        ? new Date(u.memberProfile.birthday).toLocaleDateString("en-GB", {
-            day: "numeric", month: "short", year: "numeric",
-          })
+      birthday:        u.memberProfile?.birthdayDay && u.memberProfile?.birthdayMonth
+        ? formatMonthDay(u.memberProfile.birthdayMonth, u.memberProfile.birthdayDay)
         : null,
-      birthdayIso:     u.memberProfile?.birthday
-        ? new Date(u.memberProfile.birthday).toISOString().slice(0, 10)
-        : null,
+      birthdayDay:     u.memberProfile?.birthdayDay ?? null,
+      birthdayMonth:   u.memberProfile?.birthdayMonth ?? null,
       dateCommissioned:    u.memberProfile?.dateCommissioned
         ? new Date(u.memberProfile.dateCommissioned).toLocaleDateString("en-GB", {
             day: "numeric", month: "short", year: "numeric",

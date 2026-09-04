@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
-import { calculateAge, MIN_MEMBER_AGE } from "@/lib/age";
+import { isValidMonthDay } from "@/lib/birthday";
 
 export async function PATCH(
   request: Request,
@@ -28,22 +28,21 @@ export async function PATCH(
     const phone       = body.phone ? String(body.phone).trim() : null;
     const workgroupId = String(body.workgroupId ?? "").trim();
     const mentorId    = body.mentorId ? String(body.mentorId).trim() : null;
-    const birthdayStr = body.birthday ? String(body.birthday).trim() : null;
+    const birthdayDayRaw   = body.birthdayDay;
+    const birthdayMonthRaw = body.birthdayMonth;
     const dateCommissionedStr = body.dateCommissioned ? String(body.dateCommissioned).trim() : null;
 
     if (!name)        return NextResponse.json({ error: "Name is required." }, { status: 400 });
     if (!email)       return NextResponse.json({ error: "Email is required." }, { status: 400 });
     if (!workgroupId) return NextResponse.json({ error: "Workgroup is required." }, { status: 400 });
 
-    let birthday: Date | null = null;
-    if (birthdayStr) {
-      birthday = new Date(birthdayStr);
-      if (isNaN(birthday.getTime())) {
-        return NextResponse.json({ error: "Invalid birthday." }, { status: 400 });
-      }
-      if (calculateAge(birthday) < MIN_MEMBER_AGE) {
-        return NextResponse.json({ error: `A member must be at least ${MIN_MEMBER_AGE} years old.` }, { status: 400 });
-      }
+    const birthdayDay:   number | null = birthdayDayRaw   !== undefined && birthdayDayRaw   !== null ? Number(birthdayDayRaw)   : null;
+    const birthdayMonth: number | null = birthdayMonthRaw !== undefined && birthdayMonthRaw !== null ? Number(birthdayMonthRaw) : null;
+    if ((birthdayDay === null) !== (birthdayMonth === null)) {
+      return NextResponse.json({ error: "Both day and month are required for birthday." }, { status: 400 });
+    }
+    if (birthdayDay !== null && birthdayMonth !== null && !isValidMonthDay(birthdayMonth, birthdayDay)) {
+      return NextResponse.json({ error: "Invalid birthday." }, { status: 400 });
     }
 
     let dateCommissioned: Date | null = null;
@@ -96,7 +95,7 @@ export async function PATCH(
       }),
       prisma.memberProfile.update({
         where: { userId: id },
-        data:  { workgroupId, mentorId: mentorId || null, birthday, dateCommissioned },
+        data:  { workgroupId, mentorId: mentorId || null, birthdayDay, birthdayMonth, dateCommissioned },
       }),
     ]);
 

@@ -7,7 +7,7 @@ import { canAccessModule, MODULE_CODES, type ModuleAssignment } from "@/lib/perm
 import { prisma } from "@/lib/prisma";
 import { notifyMemberWelcome } from "@/lib/notify";
 import { generateMemberInvoices } from "@/lib/invoicing";
-import { calculateAge, MIN_MEMBER_AGE } from "@/lib/age";
+import { isValidMonthDay } from "@/lib/birthday";
 
 /** Generates a random temporary password like CP@abc123 */
 function generateTempPassword(): string {
@@ -37,8 +37,10 @@ export async function POST(request: Request) {
     const workgroupId   = String(body.workgroupId ?? "").trim();
     const mentorId      = body.mentorId ? String(body.mentorId).trim() : null;
     const joinDateStr   = body.joinDate ? String(body.joinDate).trim() : null;
+    const invoiceStartDateStr = body.invoiceStartDate ? String(body.invoiceStartDate).trim() : null;
     const preferredName = body.preferredName ? String(body.preferredName).trim() : null;
-    const birthdayStr   = body.birthday ? String(body.birthday).trim() : null;
+    const birthdayDayRaw   = body.birthdayDay;
+    const birthdayMonthRaw = body.birthdayMonth;
     const dateCommissionedStr = body.dateCommissioned ? String(body.dateCommissioned).trim() : null;
 
     if (!name)        return NextResponse.json({ error: "Name is required." }, { status: 400 });
@@ -50,15 +52,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid join date." }, { status: 400 });
     }
 
-    let birthday: Date | null = null;
-    if (birthdayStr) {
-      birthday = new Date(birthdayStr);
-      if (isNaN(birthday.getTime())) {
-        return NextResponse.json({ error: "Invalid birthday." }, { status: 400 });
-      }
-      if (calculateAge(birthday) < MIN_MEMBER_AGE) {
-        return NextResponse.json({ error: `A member must be at least ${MIN_MEMBER_AGE} years old.` }, { status: 400 });
-      }
+    if (!invoiceStartDateStr) {
+      return NextResponse.json({ error: "Invoice start date is required." }, { status: 400 });
+    }
+    const invoiceStartDate = new Date(invoiceStartDateStr);
+    if (isNaN(invoiceStartDate.getTime())) {
+      return NextResponse.json({ error: "Invalid invoice start date." }, { status: 400 });
+    }
+
+    const birthdayDay:   number | null = birthdayDayRaw   !== undefined && birthdayDayRaw   !== null ? Number(birthdayDayRaw)   : null;
+    const birthdayMonth: number | null = birthdayMonthRaw !== undefined && birthdayMonthRaw !== null ? Number(birthdayMonthRaw) : null;
+    if ((birthdayDay === null) !== (birthdayMonth === null)) {
+      return NextResponse.json({ error: "Both day and month are required for birthday." }, { status: 400 });
+    }
+    if (birthdayDay !== null && birthdayMonth !== null && !isValidMonthDay(birthdayMonth, birthdayDay)) {
+      return NextResponse.json({ error: "Invalid birthday." }, { status: 400 });
     }
 
     let dateCommissioned: Date | null = null;
@@ -111,9 +119,11 @@ export async function POST(request: Request) {
             create: {
               workgroupId,
               joinDate,
+              invoiceStartDate,
               mentorId: mentorId || null,
               preferredName: preferredName || null,
-              birthday: birthday,
+              birthdayDay,
+              birthdayMonth,
               dateCommissioned: dateCommissioned,
             },
           },
@@ -152,7 +162,7 @@ export async function POST(request: Request) {
     // Fire after the response is sent, but keep the serverless function alive
     // until these complete (fire-and-forget alone can be killed mid-flight on Vercel).
     after(async () => {
-      await generateMemberInvoices(user.id, joinDate).catch(console.error);
+      await generateMemberInvoices(user.id, invoiceStartDate).catch(console.error);
       await notifyMemberWelcome(user.id, tempPassword).catch((e) =>
         console.error("[members] welcome notification failed:", e)
       );
