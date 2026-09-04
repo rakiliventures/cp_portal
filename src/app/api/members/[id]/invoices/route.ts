@@ -19,6 +19,8 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const createdById = (session.user as { id?: string }).id ?? null;
+
   try {
     const body   = await request.json();
     const amount = Number(body.amount);
@@ -54,6 +56,7 @@ export async function POST(request: Request, { params }: Params) {
         yearOrMonth,
         amountExpected,
         notes,
+        createdById,
       },
     });
 

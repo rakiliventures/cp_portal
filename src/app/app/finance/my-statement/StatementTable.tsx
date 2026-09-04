@@ -6,6 +6,7 @@ export type StatementRow = {
   key:         string;
   dateLabel:   string;
   description: string;
+  source?:     string; // "System" or the admin's name, for invoice rows only
   account:     "CP Kitty" | "Welfare";
   debit:       number;
   credit:      number;
@@ -122,7 +123,9 @@ export function StatementTable({ rows, balances, memberName, generatedOn }: Prop
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-700 leading-snug">{row.description}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{row.dateLabel}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {row.dateLabel}{row.source && <> · {row.source}</>}
+                  </p>
                 </div>
                 <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.account === "Welfare" ? "bg-blue-50 text-blue-700" : "bg-primary/10 text-primary"}`}>
                   {row.account}
@@ -170,7 +173,10 @@ export function StatementTable({ rows, balances, memberName, generatedOn }: Prop
                 paginated.map((row) => (
                   <tr key={row.key} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 print:hover:bg-transparent">
                     <td className="px-4 py-3 tabular-nums text-slate-500 whitespace-nowrap">{row.dateLabel}</td>
-                    <td className="px-4 py-3 text-slate-700">{row.description}</td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.description}
+                      {row.source && <span className="ml-1.5 text-xs text-slate-400">· {row.source}</span>}
+                    </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.account === "Welfare" ? "bg-blue-50 text-blue-700" : "bg-primary/10 text-primary"}`}>
                         {row.account}

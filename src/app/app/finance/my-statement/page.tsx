@@ -81,6 +81,7 @@ export default async function MyStatementPage() {
       prisma.financialAccount.findMany({
         where:   { memberId: userId },
         orderBy: { yearOrMonth: "desc" },
+        include: { createdBy: { select: { name: true } } },
       }),
       prisma.payment.findMany({
         where:   { memberId: userId },
@@ -116,11 +117,15 @@ export default async function MyStatementPage() {
 
   const invoiceRows: RowWithSort[] = financialAccounts.map((acc) => {
     const expected = toNum(acc.amountExpected);
+    const isManual = acc.type === "MANUAL_CP_KITTY" || acc.type === "MANUAL_WELFARE";
     return {
       key:         `inv-${acc.id}`,
       sortKey:     invoiceSortDate(acc.type, acc.yearOrMonth),
       dateLabel:   invoiceDateLabel(acc.type, acc.yearOrMonth),
       description: acc.notes?.trim() || invoiceDescription(acc.type, acc.yearOrMonth),
+      // Who added this entry: the recorded admin for a manual entry, "System" for
+      // auto-generated dues — so members can tell the two apart.
+      source:      isManual ? (acc.createdBy?.name ?? "Admin") : "System",
       account:     CP_KITTY_TYPES.includes(acc.type) ? "CP Kitty" : "Welfare",
       // A negative amountExpected is a manual credit (e.g. an overpayment/opening
       // balance) — it belongs in the Paid column, not a negative Invoiced amount.
