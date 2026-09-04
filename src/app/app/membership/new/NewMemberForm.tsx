@@ -27,6 +27,7 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
     workgroupId:   "",
     mentorId:      "",
     joinDate:      today,
+    invoiceStartDate: today,
     preferredName: "",
     dateCommissioned: "",
   });
@@ -50,6 +51,7 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address.";
     if (!form.workgroupId)        errs.workgroupId = "Workgroup is required.";
     if (!form.joinDate)           errs.joinDate    = "Join date is required.";
+    if (!form.invoiceStartDate)   errs.invoiceStartDate = "Invoice start date is required.";
     return errs;
   }
 
@@ -71,6 +73,7 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
           workgroupId:   form.workgroupId,
           mentorId:      form.mentorId || null,
           joinDate:      form.joinDate,
+          invoiceStartDate: form.invoiceStartDate,
           preferredName: form.preferredName.trim() || null,
           birthdayDay,
           birthdayMonth,
@@ -227,6 +230,23 @@ export function NewMemberForm({ workgroups, mentors }: Props) {
               max={today}
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
+          </div>
+
+          {/* Invoice start date */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Invoice start date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={form.invoiceStartDate}
+              onChange={set("invoiceStartDate")}
+              className={`w-full rounded-xl border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
+                errors.invoiceStartDate ? "border-red-400 bg-red-50" : "border-slate-300 bg-white focus:border-primary"
+              }`}
+            />
+            {errors.invoiceStartDate && <p className="mt-1 text-xs text-red-600">{errors.invoiceStartDate}</p>}
+            <p className="mt-1 text-xs text-slate-400">The month CP Kitty &amp; Welfare dues start being invoiced from.</p>
           </div>
 
           {/* Mentor */}

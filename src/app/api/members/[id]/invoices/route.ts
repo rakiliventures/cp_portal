@@ -23,6 +23,7 @@ export async function POST(request: Request, { params }: Params) {
     const body   = await request.json();
     const amount = Number(body.amount);
     const type   = String(body.type ?? "").trim(); // CP_KITTY | WELFARE
+    const kind   = String(body.kind ?? "DEBIT").trim(); // DEBIT | CREDIT
     const notes  = body.notes ? String(body.notes).trim() : null;
 
     if (!amount || amount <= 0) {
@@ -30,6 +31,9 @@ export async function POST(request: Request, { params }: Params) {
     }
     if (type !== "CP_KITTY" && type !== "WELFARE") {
       return NextResponse.json({ error: "Type must be CP_KITTY or WELFARE." }, { status: 400 });
+    }
+    if (kind !== "DEBIT" && kind !== "CREDIT") {
+      return NextResponse.json({ error: "Kind must be DEBIT or CREDIT." }, { status: 400 });
     }
 
     // Verify the member exists
@@ -39,13 +43,16 @@ export async function POST(request: Request, { params }: Params) {
     const invoiceType = type === "CP_KITTY" ? "MANUAL_CP_KITTY" : "MANUAL_WELFARE";
     // Use a timestamp-based key so multiple manual invoices can coexist
     const yearOrMonth = new Date().toISOString();
+    // A credit line reduces what's owed (e.g. an overpayment / opening balance carried
+    // forward as a credit), stored as a negative amountExpected.
+    const amountExpected = kind === "CREDIT" ? -amount : amount;
 
     await prisma.financialAccount.create({
       data: {
         memberId,
         type:           invoiceType,
         yearOrMonth,
-        amountExpected: amount,
+        amountExpected,
         notes,
       },
     });

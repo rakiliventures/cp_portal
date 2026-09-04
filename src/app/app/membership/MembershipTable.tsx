@@ -465,6 +465,7 @@ type InvoiceModalProps = {
 function InvoiceModal({ memberId, memberName, onClose, onSuccess }: InvoiceModalProps) {
   const [amount,     setAmount]     = useState("");
   const [type,       setType]       = useState<"CP_KITTY" | "WELFARE">("CP_KITTY");
+  const [kind,       setKind]       = useState<"DEBIT" | "CREDIT">("DEBIT");
   const [notes,      setNotes]      = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error,      setError]      = useState("");
@@ -479,7 +480,7 @@ function InvoiceModal({ memberId, memberName, onClose, onSuccess }: InvoiceModal
       const res = await fetch(`/api/members/${memberId}/invoices`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ amount: num, type, notes: notes.trim() || undefined }),
+        body:    JSON.stringify({ amount: num, type, kind, notes: notes.trim() || undefined }),
       });
       if (res.ok) {
         onSuccess();
@@ -501,6 +502,25 @@ function InvoiceModal({ memberId, memberName, onClose, onSuccess }: InvoiceModal
         <p className="mt-0.5 text-sm text-slate-500">{memberName}</p>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Entry type</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setKind("DEBIT")}
+                className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
+                  kind === "DEBIT" ? "border-primary bg-primary/10 text-primary" : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                }`}>
+                Debit
+                <span className="block text-[11px] font-normal text-slate-400">Adds to dues owed</span>
+              </button>
+              <button type="button" onClick={() => setKind("CREDIT")}
+                className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
+                  kind === "CREDIT" ? "border-primary bg-primary/10 text-primary" : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                }`}>
+                Credit
+                <span className="block text-[11px] font-normal text-slate-400">Overpayment / reduces dues</span>
+              </button>
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Amount (KES)</label>
             <input type="number" min="1" step="1" placeholder="e.g. 5000" value={amount}
@@ -531,7 +551,7 @@ function InvoiceModal({ memberId, memberName, onClose, onSuccess }: InvoiceModal
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                 </svg>
               )}
-              {submitting ? "Saving…" : "Add invoice"}
+              {submitting ? "Saving…" : kind === "CREDIT" ? "Add credit" : "Add invoice"}
             </button>
             <button type="button" onClick={onClose} disabled={submitting}
               className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">

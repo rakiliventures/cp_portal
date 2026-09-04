@@ -102,6 +102,7 @@ async function main() {
             userId: memberUser.id,
             workgroupId: defaultWorkgroup.id,
             joinDate: new Date(),
+            invoiceStartDate: new Date("2026-09-01"),
           },
         });
         for (const mod of [personalDashboard, groupReports, pastEvents, calendar, downloads]) {
@@ -153,6 +154,7 @@ async function main() {
           userId: user.id,
           workgroupId: m.workgroupId,
           joinDate: m.joinDate,
+          invoiceStartDate: new Date("2026-09-01"),
         },
       });
       await prisma.memberWorkgroupHistory.create({
@@ -190,6 +192,7 @@ async function main() {
         userId: adminUser.id,
         workgroupId: spiritualDevForAdmin.id,
         joinDate: adminJoinDate,
+        invoiceStartDate: new Date("2026-09-01"),
       },
     });
     await prisma.memberWorkgroupHistory.create({
