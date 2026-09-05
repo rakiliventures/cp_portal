@@ -25,6 +25,9 @@ export async function PATCH(
   const payment = await prisma.payment.findUnique({ where: { id } });
   if (!payment) return NextResponse.json({ error: "Payment not found." }, { status: 404 });
   if (payment.verified) return NextResponse.json({ error: "Already verified." }, { status: 400 });
+  if (payment.createdById && payment.createdById === verifiedById) {
+    return NextResponse.json({ error: "You cannot verify a payment you created yourself." }, { status: 400 });
+  }
 
   await prisma.payment.update({
     where: { id },

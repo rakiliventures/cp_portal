@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import { ErrorToast } from "@/components/ui/ErrorToast";
 import { BirthdayFields } from "@/components/ui/BirthdayFields";
 import { useRouter } from "next/navigation";
@@ -39,6 +40,7 @@ type Props = {
   workgroups:         WorkgroupCount[];
   canCreate:          boolean;
   canEdit:            boolean;
+  canViewStatements:  boolean;
   attendanceYear:     number;
   attendanceTotals:   AttendanceTotals;
   showDeactivatedAt?: boolean;
@@ -566,7 +568,7 @@ function InvoiceModal({ memberId, memberName, onClose, onSuccess }: InvoiceModal
 
 // ── Main table ─────────────────────────────────────────────────────────────────
 
-export function MembershipTable({ members, workgroups, canCreate, canEdit, attendanceYear, attendanceTotals, showDeactivatedAt = false }: Props) {
+export function MembershipTable({ members, workgroups, canCreate, canEdit, canViewStatements, attendanceYear, attendanceTotals, showDeactivatedAt = false }: Props) {
   const router = useRouter();
 
   const [query,         setQuery]         = useState("");
@@ -784,6 +786,15 @@ export function MembershipTable({ members, workgroups, canCreate, canEdit, atten
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   </button>
+                  {/* View statement */}
+                  {canViewStatements && (
+                    <Link href={`/app/finance/member-statement/${m.id}`} title="View statement"
+                      className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-primary">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 3.75h6M6 4.5h9l4.5 4.5v10.5A2.25 2.25 0 0117.25 21.75H6.75A2.25 2.25 0 014.5 19.5V6.75A2.25 2.25 0 016.75 4.5H9z" />
+                      </svg>
+                    </Link>
+                  )}
                   {/* Edit member */}
                   {canEdit && (
                     <button type="button" onClick={() => setEditingMember(m)} title="Edit member"
@@ -886,6 +897,15 @@ export function MembershipTable({ members, workgroups, canCreate, canEdit, atten
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
                         </button>
+                        {/* View statement */}
+                        {canViewStatements && (
+                          <Link href={`/app/finance/member-statement/${m.id}`} title="View statement"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-primary">
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 3.75h6M6 4.5h9l4.5 4.5v10.5A2.25 2.25 0 0117.25 21.75H6.75A2.25 2.25 0 014.5 19.5V6.75A2.25 2.25 0 016.75 4.5H9z" />
+                            </svg>
+                          </Link>
+                        )}
                         {/* Edit member */}
                         {canEdit && (
                           <button type="button" onClick={() => setEditingMember(m)} title="Edit member"

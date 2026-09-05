@@ -21,14 +21,15 @@ export type SerializedPayment = {
 };
 
 type Props = {
-  payments: SerializedPayment[];
-  canEdit: boolean;
-  canDelete: boolean;
+  payments:      SerializedPayment[];
+  canEdit:       boolean;
+  canDelete:     boolean;
+  currentUserId: string;
 };
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
-export function PaymentsTable({ payments, canEdit, canDelete }: Props) {
+export function PaymentsTable({ payments, canEdit, canDelete, currentUserId }: Props) {
   const [query, setQuery]       = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo]     = useState("");
@@ -272,6 +273,7 @@ export function PaymentsTable({ payments, canEdit, canDelete }: Props) {
                     verified={p.verified}
                     canEdit={canEdit}
                     canDelete={canDelete}
+                    isOwnEntry={p.createdById === currentUserId}
                   />
                 </div>
               </div>
@@ -381,6 +383,7 @@ export function PaymentsTable({ payments, canEdit, canDelete }: Props) {
                           verified={p.verified}
                           canEdit={canEdit}
                           canDelete={canDelete}
+                          isOwnEntry={p.createdById === currentUserId}
                         />
                       </td>
                     </tr>
