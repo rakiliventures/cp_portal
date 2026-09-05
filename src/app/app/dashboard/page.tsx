@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { MONTH_NAMES, formatMonthDay } from "@/lib/birthday";
 import { ContactCard } from "./ContactCard";
 import { AttendanceListModal } from "./AttendanceListModal";
 
@@ -46,12 +47,14 @@ export default async function DashboardPage() {
   const userId = (session.user as { id?: string }).id;
   if (!userId) redirect("/login?callbackUrl=/app/dashboard");
 
-  const now       = new Date();
+  const now         = new Date();
   const currentYear = now.getFullYear();
-  const yearStart = new Date(`${currentYear}-01-01`);
+  const currentMonth = now.getMonth() + 1; // birthdayMonth is 1-indexed
+  const todayDay    = now.getDate();
+  const yearStart   = new Date(`${currentYear}-01-01`);
 
-  // Batch 1: user identity + event data (4 queries)
-  const [user, allPastEvents, allAttendedRaw, menteeProfiles] = await Promise.all([
+  // Batch 1: user identity + event data (5 queries)
+  const [user, allPastEvents, allAttendedRaw, menteeProfiles, birthdaysThisMonthRaw] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -77,6 +80,12 @@ export default async function DashboardPage() {
       where:   { mentorId: userId },
       include: { user: { select: { id: true, name: true, email: true } } },
     }),
+    // Group-wide: every active member with a birthday in the current month
+    prisma.memberProfile.findMany({
+      where:   { birthdayMonth: currentMonth, user: { status: "Active" } },
+      select:  { userId: true, birthdayDay: true, preferredName: true, user: { select: { name: true } } },
+      orderBy: { birthdayDay: "asc" },
+    }),
   ]);
 
   if (!user) redirect("/login?callbackUrl=/app/dashboard");
@@ -99,6 +108,16 @@ export default async function DashboardPage() {
 
   // allPastEvents is already scoped to the current year
   const pastEventsThisYear = allPastEvents;
+
+  // ── Birthdays this month (whole group, not just workgroup) ──────
+  const birthdaysThisMonth = birthdaysThisMonthRaw
+    .filter((b) => b.birthdayDay != null)
+    .map((b) => ({
+      userId:  b.userId,
+      name:    b.preferredName ?? b.user.name ?? "Member",
+      day:     b.birthdayDay as number,
+      isToday: b.birthdayDay === todayDay,
+    }));
 
   const profile = user.memberProfile;
 
@@ -434,6 +453,41 @@ export default async function DashboardPage() {
             birthdayDay={profile?.birthdayDay ?? null}
             birthdayMonth={profile?.birthdayMonth ?? null}
           />
+
+          {/* ── 7: Birthdays this month ─────────────────────────── */}
+          <div className="card flex flex-col gap-3 sm:col-span-2 lg:col-span-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Birthdays This Month</p>
+              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+                {MONTH_NAMES[currentMonth - 1]}
+              </span>
+            </div>
+            {birthdaysThisMonth.length === 0 ? (
+              <p className="py-2 text-sm text-slate-400">No birthdays recorded for this month.</p>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {birthdaysThisMonth.map((b) => (
+                  <li
+                    key={b.userId}
+                    className={`flex items-center gap-3 rounded-xl px-2 py-2.5 ${b.isToday ? "bg-amber-50" : ""}`}
+                  >
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${b.isToday ? "bg-amber-100" : "bg-slate-100"}`}>
+                      <svg className={`h-4 w-4 ${b.isToday ? "text-amber-600" : "text-slate-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v3m0 0c-1.5 0-1.5-2.25-3-2.25S6 9 6 9m6 0c1.5 0 1.5-2.25 3-2.25S18 9 18 9M5.25 11.25h13.5a.75.75 0 01.75.75v7.5a.75.75 0 01-.75.75H5.25a.75.75 0 01-.75-.75v-7.5a.75.75 0 01.75-.75z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15h15" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-medium ${b.isToday ? "text-amber-800" : "text-slate-700"}`}>{b.name}</p>
+                      <p className={`text-xs ${b.isToday ? "font-semibold text-amber-600" : "text-slate-400"}`}>
+                        {b.isToday ? `It's ${b.name}'s birthday today!` : formatMonthDay(currentMonth, b.day)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
         </div>
       )}

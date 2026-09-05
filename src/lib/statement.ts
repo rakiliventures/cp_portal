@@ -24,11 +24,14 @@ export type StatementRow = {
   description:   string;
   source?:       string;  // "System" / "Imported" / the admin's name
   verifiedLabel?: string; // undefined = not applicable (system-generated dues)
+  verified?:     boolean; // raw status backing verifiedLabel — undefined alongside it
   canVerify?:    boolean; // whether the current viewer may verify this row
   canEdit?:      boolean; // whether the current viewer may edit this row (invoices only, creator-only)
   rawAmountExpected?: number;             // signed — negative means a credit
   rawKitty?:          "CP_KITTY" | "WELFARE";
   rawNotes?:          string;
+  memberId?:     string; // set when listing across members (e.g. the All Invoices page)
+  memberName?:   string;
   account:       "CP Kitty" | "Welfare";
   debit:         number;
   credit:        number;
@@ -81,6 +84,8 @@ function invoiceDateLabel(type: string, yearOrMonth: string): string {
 
 export type StatementFinancialAccount = {
   id:             string;
+  memberId:       string;
+  member?:        { name: string | null } | null; // only present when listing across members
   type:           string;
   yearOrMonth:    string;
   amountExpected: unknown;
@@ -123,14 +128,18 @@ export function buildInvoiceRow(
     dateLabel:   invoiceDateLabel(acc.type, acc.yearOrMonth),
     description: acc.notes?.trim() || invoiceDescription(acc.type, acc.yearOrMonth),
     source:      isManual ? (acc.createdBy?.name ?? "Admin") : "System",
+    // System-generated dues have no verification concept — no "Verified by" line for those.
     verifiedLabel: isManual
-      ? (acc.verified ? `Verified by ${acc.verifiedBy?.name ?? "Admin"}` : "Pending verification")
+      ? `Verified by: ${acc.verified ? (acc.verifiedBy?.name ?? "Admin") : "Pending"}`
       : undefined,
+    verified:    isManual ? acc.verified : undefined,
     canVerify:   isManual && !acc.verified && canVerifyPermission && !isOwn,
     canEdit:     isManual && !acc.verified && isOwn && canEditPermission,
     rawAmountExpected: expected,
     rawKitty:    acc.type === "MANUAL_CP_KITTY" ? "CP_KITTY" : acc.type === "MANUAL_WELFARE" ? "WELFARE" : undefined,
     rawNotes:    acc.notes ?? "",
+    memberId:    acc.memberId,
+    memberName:  acc.member?.name ?? undefined,
     account:     CP_KITTY_TYPES.includes(acc.type) ? "CP Kitty" : "Welfare",
     // A negative amountExpected is a manual credit (e.g. an overpayment/opening
     // balance) — it belongs in the Paid column, not a negative Invoiced amount.
@@ -151,7 +160,8 @@ export function buildPaymentRow(
     dateLabel:   new Date(pay.datePaid).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
     description: `M-PESA Payment (${pay.mpesaCode})`,
     source:      pay.createdById === null ? "Imported" : (pay.createdBy?.name ?? "Admin"),
-    verifiedLabel: pay.verified ? `Verified by ${pay.verifiedBy?.name ?? "Admin"}` : "Pending verification",
+    verifiedLabel: `Verified by: ${pay.verified ? (pay.verifiedBy?.name ?? "Admin") : "Pending"}`,
+    verified:    pay.verified,
     canVerify:   !pay.verified && canVerifyPermission && !isOwn,
     account:     pay.account.code === "CP-WELFARE" ? "Welfare" : "CP Kitty",
     debit:       0,

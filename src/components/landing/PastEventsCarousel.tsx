@@ -3,8 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useCallback, useRef, useEffect } from "react";
-import type { PastEvent } from "@/lib/events-data";
-import { PAST_EVENTS } from "@/lib/events-data";
+import { getPastEvents } from "@/lib/events-data";
 
 const SWIPE_THRESHOLD = 50;
 
@@ -12,7 +11,7 @@ export function PastEventsCarousel() {
   const [index, setIndex] = useState(0);
   const touchStart = useRef<number | null>(null);
   const touchEnd = useRef<number | null>(null);
-  const events = PAST_EVENTS;
+  const events = getPastEvents();
   const count = events.length;
 
   const goTo = useCallback(

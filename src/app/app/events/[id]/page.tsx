@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
@@ -93,47 +92,30 @@ export default async function AppEventDetailPage({ params }: PageProps) {
 
       <article className="card overflow-hidden p-0">
         {event.imageBannerUrl && (
-          <div className="relative w-full bg-slate-200" style={{ aspectRatio: "16/7" }}>
-            <Image
+          // Full poster, uncropped and with no text overlaid on it — every detail on
+          // the poster (dates, times, fine print) needs to stay legible.
+          <div className="w-full bg-slate-100">
+            <img
               src={event.imageBannerUrl}
               alt={event.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 800px"
-              priority
-              unoptimized={event.imageBannerUrl.startsWith("http")}
+              className="block w-full h-auto"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4 text-white sm:p-6">
-              <div className="flex flex-wrap gap-2">
-                <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
-                  {isPast ? "Past event" : "Upcoming"}
-                </span>
-                <span className="rounded-full bg-primary/80 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
-                  {categoryLabel}
-                </span>
-              </div>
-              <time className="mt-2 block text-sm font-medium text-white/90">{dateStr}</time>
-              <h1 className="mt-1 text-xl font-bold text-white sm:text-3xl leading-tight">{event.title}</h1>
-            </div>
           </div>
         )}
 
         <div className="p-5 sm:p-8">
-          {!event.imageBannerUrl && (
-            <div className="mb-4">
-              <div className="flex flex-wrap gap-2">
-                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-                  {isPast ? "Past event" : "Upcoming"}
-                </span>
-                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                  {categoryLabel}
-                </span>
-              </div>
-              <time className="mt-2 block text-sm font-medium text-slate-600">{dateStr}</time>
-              <h1 className="page-heading mt-1 mb-0">{event.title}</h1>
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+                {isPast ? "Past event" : "Upcoming"}
+              </span>
+              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                {categoryLabel}
+              </span>
             </div>
-          )}
+            <time className="mt-2 block text-sm font-medium text-slate-600">{dateStr}</time>
+            <h1 className="page-heading mt-1 mb-0">{event.title}</h1>
+          </div>
 
           <dl className="mt-3 space-y-1 text-sm">
             {event.theme && (

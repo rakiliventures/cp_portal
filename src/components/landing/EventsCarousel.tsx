@@ -3,8 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { UpcomingEvent } from "@/lib/events-data";
-import { UPCOMING_EVENTS } from "@/lib/events-data";
+import { getUpcomingEvents } from "@/lib/events-data";
 
 const SWIPE_THRESHOLD = 50;
 
@@ -12,7 +11,7 @@ export function EventsCarousel() {
   const [index, setIndex] = useState(0);
   const touchStart = useRef<number | null>(null);
   const touchEnd = useRef<number | null>(null);
-  const events = UPCOMING_EVENTS;
+  const events = getUpcomingEvents();
   const count = events.length;
 
   const goTo = useCallback(

@@ -254,6 +254,13 @@ export function PaymentsTable({ payments, canEdit, canDelete, currentUserId }: P
                     {p.member.name ?? p.member.email ?? "—"}
                   </span>
                 </div>
+                {/* Row 3b: created by / verified by */}
+                <p className="mt-0.5 text-[11px] text-slate-400">
+                  Created by: {p.createdById === null ? "Imported" : (p.createdBy?.name ?? "Admin")}
+                  <span className={p.verified ? "text-green-600" : "text-amber-600"}>
+                    {" "}· Verified by: {p.verified ? (p.verifiedBy?.name ?? "Admin") : "Pending"}
+                  </span>
+                </p>
                 {/* Row 4: verification status + actions */}
                 <div className="no-print mt-2 flex items-center justify-between">
                   {p.verified ? (

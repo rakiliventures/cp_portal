@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { UPCOMING_EVENTS, PAST_EVENTS } from "@/lib/events-data";
+import { getUpcomingEvents, getPastEvents } from "@/lib/events-data";
 import type { UpcomingEvent, PastEvent } from "@/lib/events-data";
 
 function EventCard({
@@ -48,6 +48,9 @@ function EventCard({
 }
 
 export default function EventsPage() {
+  const upcomingEvents = getUpcomingEvents();
+  const pastEvents     = getPastEvents();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50">
       <header className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
@@ -67,13 +70,13 @@ export default function EventsPage() {
           <h2 className="mb-4 text-2xl font-bold text-primary sm:text-3xl">
             Upcoming events
           </h2>
-          {UPCOMING_EVENTS.length === 0 ? (
+          {upcomingEvents.length === 0 ? (
             <p className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-slate-600">
               No upcoming events at the moment.
             </p>
           ) : (
             <ul className="space-y-6">
-              {UPCOMING_EVENTS.map((event) => (
+              {upcomingEvents.map((event) => (
                 <li key={event.id}>
                   <EventCard event={event} isPast={false} />
                 </li>
@@ -86,13 +89,13 @@ export default function EventsPage() {
           <h2 className="mb-4 text-2xl font-bold text-primary sm:text-3xl">
             Past events
           </h2>
-          {PAST_EVENTS.length === 0 ? (
+          {pastEvents.length === 0 ? (
             <p className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-slate-600">
               No past events to show yet.
             </p>
           ) : (
             <ul className="space-y-6">
-              {PAST_EVENTS.map((event) => (
+              {pastEvents.map((event) => (
                 <li key={event.id}>
                   <EventCard event={event} isPast />
                 </li>

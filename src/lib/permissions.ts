@@ -71,6 +71,7 @@ export function getMenuModules(modules: ModuleAssignment[] | undefined, isSuperA
     { code: MODULE_CODES.PERSONAL_DASHBOARD, label: "My Payments",             href: "/app/finance/my-payments" },
     { code: MODULE_CODES.PERSONAL_DASHBOARD, label: "My Statement",             href: "/app/finance/my-statement" },
     { code: MODULE_CODES.FINANCE,            label: "All Payments",             href: "/app/finance/payments" },
+    { code: MODULE_CODES.FINANCE,            label: "All Invoices",             href: "/app/finance/invoices" },
     { code: MODULE_CODES.FINANCE,            label: "CP Kitty Summary Report",  href: "/app/finance/cp-kitty-report" },
     { code: MODULE_CODES.FINANCE,            label: "Welfare Summary Report",   href: "/app/finance/welfare-report" },
     { code: MODULE_CODES.FINANCE,            label: "Budget",                   href: "/app/finance/budget" },

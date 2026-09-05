@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getEventById } from "@/lib/events-data";
@@ -38,28 +37,20 @@ export default async function EventPage({ params }: PageProps) {
 
       <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
         <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
-          <div className="relative aspect-[2/1] w-full bg-slate-200">
-            <Image
-              src={event.imageUrl}
-              alt={event.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 672px"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4 text-white sm:p-6">
-              <span className="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
-                {event.isPast ? "Past event" : "Upcoming event"}
-              </span>
-              <time className="mt-2 block text-sm font-medium text-white/95">{event.date}</time>
-              <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{event.title}</h1>
-            </div>
+          {/* Full poster, uncropped and with no text overlaid on it — every detail on
+              the poster needs to stay legible. */}
+          <div className="w-full bg-slate-100">
+            <img src={event.imageUrl} alt={event.title} className="block w-full h-auto" />
           </div>
-
           <div className="p-5 sm:p-8">
+            <span className="inline-block rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+              {event.isPast ? "Past event" : "Upcoming event"}
+            </span>
+            <time className="mt-2 block text-sm font-medium text-slate-500">{event.date}</time>
+            <h1 className="mt-1 text-2xl font-bold text-primary sm:text-3xl">{event.title}</h1>
+
             {theme && (
-              <p className="text-sm font-medium text-slate-500 sm:text-base">
+              <p className="mt-3 text-sm font-medium text-slate-500 sm:text-base">
                 Theme: <span className="text-slate-700">{theme}</span>
               </p>
             )}

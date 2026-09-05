@@ -25,7 +25,7 @@ function formatCurrency(n: number) {
 
 // ── Edit manual invoice modal ───────────────────────────────────────────────
 
-function EditInvoiceModal({
+export function EditInvoiceModal({
   row, memberId, onClose, onSuccess,
 }: {
   row:       StatementRow;
@@ -126,7 +126,7 @@ function EditInvoiceModal({
 
 // ── Small icon action buttons ────────────────────────────────────────────────
 
-function VerifyIconButton({ onClick, busy }: { onClick: () => void; busy: boolean }) {
+export function VerifyIconButton({ onClick, busy }: { onClick: () => void; busy: boolean }) {
   return (
     <button type="button" onClick={onClick} disabled={busy} title="Verify"
       className="flex h-7 w-7 items-center justify-center rounded-lg text-primary transition hover:bg-primary/10 disabled:opacity-50">
@@ -141,7 +141,7 @@ function VerifyIconButton({ onClick, busy }: { onClick: () => void; busy: boolea
   );
 }
 
-function EditIconButton({ onClick }: { onClick: () => void }) {
+export function EditIconButton({ onClick }: { onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} title="Edit entry"
       className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-primary">
@@ -183,6 +183,7 @@ export function StatementTable({ rows, balances, memberName, generatedOn, member
 
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const paginated  = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const hasActions = rows.some((r) => r.canEdit || r.canVerify);
 
   // Reset to page 1 if rows change
   useEffect(() => { setPage(1); }, [rows.length]);
@@ -284,9 +285,13 @@ export function StatementTable({ rows, balances, memberName, generatedOn, member
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-700 leading-snug">{row.description}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {row.dateLabel}{row.source && <> · {row.source}</>}
-                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">{row.dateLabel}</p>
+                  {row.source && (
+                    <p className="mt-0.5 text-[11px] text-slate-400">
+                      Created by: {row.source}
+                      {row.verifiedLabel && <span className={row.verified ? "text-green-600" : "text-amber-600"}> · {row.verifiedLabel}</span>}
+                    </p>
+                  )}
                 </div>
                 <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.account === "Welfare" ? "bg-blue-50 text-blue-700" : "bg-primary/10 text-primary"}`}>
                   {row.account}
@@ -307,17 +312,10 @@ export function StatementTable({ rows, balances, memberName, generatedOn, member
                   </p>
                 </div>
               </div>
-              {memberId && (row.verifiedLabel || row.canVerify || row.canEdit) && (
-                <div className="flex items-center justify-between border-t border-slate-100 pt-2">
-                  {row.verifiedLabel && (
-                    <p className={`text-xs ${row.verifiedLabel.startsWith("Verified") ? "text-green-700" : "text-amber-600"}`}>
-                      {row.verifiedLabel}
-                    </p>
-                  )}
-                  <div className="ml-auto flex items-center gap-1">
-                    {row.canEdit && <EditIconButton onClick={() => setEditingRow(row)} />}
-                    {row.canVerify && <VerifyIconButton onClick={() => handleVerify(row)} busy={verifyingKey === row.key} />}
-                  </div>
+              {(row.canVerify || row.canEdit) && (
+                <div className="flex items-center justify-end gap-1 border-t border-slate-100 pt-2">
+                  {row.canEdit && <EditIconButton onClick={() => setEditingRow(row)} />}
+                  {row.canVerify && <VerifyIconButton onClick={() => handleVerify(row)} busy={verifyingKey === row.key} />}
                 </div>
               )}
             </div>
@@ -336,21 +334,26 @@ export function StatementTable({ rows, balances, memberName, generatedOn, member
                 <th className="px-4 py-3 text-left font-semibold text-slate-700">Account</th>
                 <th className="px-4 py-3 text-right font-semibold text-slate-700">Invoiced</th>
                 <th className="px-4 py-3 text-right font-semibold text-slate-700">Paid</th>
-                {memberId && <th className="no-print px-4 py-3 text-left font-semibold text-slate-700">Verification</th>}
+                {hasActions && <th className="no-print px-4 py-3 text-left font-semibold text-slate-700">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={memberId ? 6 : 5} className="px-4 py-10 text-center text-slate-400">No records yet.</td>
+                  <td colSpan={hasActions ? 6 : 5} className="px-4 py-10 text-center text-slate-400">No records yet.</td>
                 </tr>
               ) : (
                 paginated.map((row) => (
                   <tr key={row.key} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 print:hover:bg-transparent">
                     <td className="px-4 py-3 tabular-nums text-slate-500 whitespace-nowrap">{row.dateLabel}</td>
                     <td className="px-4 py-3 text-slate-700">
-                      {row.description}
-                      {row.source && <span className="ml-1.5 text-xs text-slate-400">· {row.source}</span>}
+                      <p>{row.description}</p>
+                      {row.source && (
+                        <p className="mt-0.5 text-[11px] text-slate-400">
+                          Created by: {row.source}
+                          {row.verifiedLabel && <span className={row.verified ? "text-green-600" : "text-amber-600"}> · {row.verifiedLabel}</span>}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.account === "Welfare" ? "bg-blue-50 text-blue-700" : "bg-primary/10 text-primary"}`}>
@@ -363,14 +366,9 @@ export function StatementTable({ rows, balances, memberName, generatedOn, member
                     <td className="px-4 py-3 text-right tabular-nums font-medium text-green-700">
                       {row.credit > 0 ? formatCurrency(row.credit) : <span className="text-slate-300 font-normal">—</span>}
                     </td>
-                    {memberId && (
+                    {hasActions && (
                       <td className="no-print px-4 py-3">
                         <div className="flex items-center gap-2">
-                          {row.verifiedLabel && (
-                            <p className={`text-xs ${row.verifiedLabel.startsWith("Verified") ? "text-green-700" : "text-amber-600"}`}>
-                              {row.verifiedLabel}
-                            </p>
-                          )}
                           {row.canEdit && <EditIconButton onClick={() => setEditingRow(row)} />}
                           {row.canVerify && <VerifyIconButton onClick={() => handleVerify(row)} busy={verifyingKey === row.key} />}
                         </div>
