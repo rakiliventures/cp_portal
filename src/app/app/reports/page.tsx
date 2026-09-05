@@ -193,14 +193,29 @@ export default async function ReportsPage() {
 
   let cpKittyPaid = 0;
   let welfarePaid = 0;
+  let bothCompliant = 0;
+  let cpOnlyCompliant = 0;
+  let welfareOnlyCompliant = 0;
+  let neitherCompliant = 0;
   for (const bal of balances.values()) {
-    if (bal.cpKitty >= 0) cpKittyPaid++;
-    if (bal.welfare >= 0) welfarePaid++;
+    const cpOk  = bal.cpKitty >= 0;
+    const welOk = bal.welfare >= 0;
+    if (cpOk) cpKittyPaid++;
+    if (welOk) welfarePaid++;
+    if (cpOk && welOk)        bothCompliant++;
+    else if (cpOk && !welOk)  cpOnlyCompliant++;
+    else if (!cpOk && welOk)  welfareOnlyCompliant++;
+    else                      neitherCompliant++;
   }
   const cpKittyUnpaid = Math.max(0, totalMembers - cpKittyPaid);
   const welfareUnpaid = Math.max(0, totalMembers - welfarePaid);
   const cpKittyPct    = totalMembers > 0 ? Math.round((cpKittyPaid  / totalMembers) * 100) : 0;
   const welfarePct    = totalMembers > 0 ? Math.round((welfarePaid  / totalMembers) * 100) : 0;
+
+  const notFullyCompliant = totalMembers - bothCompliant;
+  const overallPct        = totalMembers > 0 ? Math.round((bothCompliant / totalMembers) * 100) : 0;
+  const biasedTotal       = cpOnlyCompliant + welfareOnlyCompliant;
+  const neitherPct        = totalMembers > 0 ? Math.round((neitherCompliant / totalMembers) * 100) : 0;
 
   const kittyAtHand   = collectedPrevYear   + collectedThisYear   - totalKittyExpensesThisYear;
   const welfareAtHand = collectedWelfarePrevYear + collectedWelfareThisYear - totalWelfareExpensesThisYear;
@@ -297,6 +312,69 @@ export default async function ReportsPage() {
             </div>
           )}
         </div>
+
+      </div>
+
+      {/* ── Compliance ───────────────────────────────────────────────── */}
+      <SectionHeading label="Compliance" accent="#C4A634" />
+
+      <div className="grid gap-4 lg:grid-cols-3">
+
+        {/* Overall compliance (both kitties) */}
+        <div className="card py-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Overall</p>
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">paid up in both</span>
+          </div>
+          {totalMembers === 0 ? (
+            <p className="text-sm text-slate-400">No active members.</p>
+          ) : (
+            <div className="flex items-center gap-5">
+              <DonutChart
+                gradient={buildDonut([{ value: bothCompliant }, { value: notFullyCompliant }], [PAID_COLOR, UNPD_COLOR])}
+                centerLabel={`${overallPct}%`}
+                centerSub="paid up"
+                size={96}
+              />
+              <ul className="min-w-0 flex-1 space-y-2">
+                <LegendItem color={PAID_COLOR} label="Paid up in both"     count={bothCompliant}     total={totalMembers} />
+                <LegendItem color="#94a3b8"      label="Not fully paid up" count={notFullyCompliant} total={totalMembers} />
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Contribution bias: paid up in one kitty only */}
+        <div className="card py-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Contribution Bias</p>
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">one kitty only</span>
+          </div>
+          {biasedTotal === 0 ? (
+            <p className="text-sm text-slate-400">No members are paid up in only one kitty.</p>
+          ) : (
+            <div className="flex items-center gap-5">
+              <DonutChart
+                gradient={buildDonut([{ value: cpOnlyCompliant }, { value: welfareOnlyCompliant }], ["#367C00", "#0369a1"])}
+                centerLabel={String(biasedTotal)}
+                centerSub="one kitty only"
+                size={96}
+              />
+              <ul className="min-w-0 flex-1 space-y-2">
+                <LegendItem color="#367C00" label="CP Kitty only" count={cpOnlyCompliant}      total={totalMembers} />
+                <LegendItem color="#0369a1" label="Welfare only"  count={welfareOnlyCompliant} total={totalMembers} />
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Not compliant in either */}
+        <StatCard
+          label="Not Compliant (Either Kitty)"
+          value={String(neitherCompliant)}
+          sub={`${neitherPct}% of active members`}
+          accent="#dc2626" warn={neitherCompliant > 0}
+        />
 
       </div>
 

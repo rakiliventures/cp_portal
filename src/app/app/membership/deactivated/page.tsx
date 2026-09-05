@@ -9,6 +9,10 @@ export default async function DeactivatedMembersPage() {
   const isSuperAdmin = !!(session?.user as { isSuperAdmin?: boolean })?.isSuperAdmin;
   const modules      = (session?.user as { modules?: ModuleAssignment[] })?.modules;
   const canEdit      = canAccessModule(modules, isSuperAdmin, MODULE_CODES.MEMBERSHIP, "edit");
+  const canViewStatements =
+    isSuperAdmin ||
+    (canAccessModule(modules, isSuperAdmin, MODULE_CODES.MEMBERSHIP, "view") &&
+     canAccessModule(modules, isSuperAdmin, MODULE_CODES.FINANCE, "view"));
 
   const { serializedMembers, workgroupCounts, attendanceYear, attendanceTotals } =
     await fetchMemberPageData("Paused");
@@ -27,6 +31,7 @@ export default async function DeactivatedMembersPage() {
         workgroups={workgroupCounts}
         canCreate={false}
         canEdit={canEdit}
+        canViewStatements={canViewStatements}
         attendanceYear={attendanceYear}
         attendanceTotals={attendanceTotals}
         showDeactivatedAt

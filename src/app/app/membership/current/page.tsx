@@ -11,6 +11,10 @@ export default async function CurrentMembersPage() {
   const modules      = (session?.user as { modules?: ModuleAssignment[] })?.modules;
   const canCreate    = canAccessModule(modules, isSuperAdmin, MODULE_CODES.MEMBERSHIP, "create");
   const canEdit      = canAccessModule(modules, isSuperAdmin, MODULE_CODES.MEMBERSHIP, "edit");
+  const canViewStatements =
+    isSuperAdmin ||
+    (canAccessModule(modules, isSuperAdmin, MODULE_CODES.MEMBERSHIP, "view") &&
+     canAccessModule(modules, isSuperAdmin, MODULE_CODES.FINANCE, "view"));
 
   const { serializedMembers, workgroupCounts, attendanceYear, attendanceTotals } =
     await fetchMemberPageData("Active");
@@ -34,6 +38,7 @@ export default async function CurrentMembersPage() {
         workgroups={workgroupCounts}
         canCreate={canCreate}
         canEdit={canEdit}
+        canViewStatements={canViewStatements}
         attendanceYear={attendanceYear}
         attendanceTotals={attendanceTotals}
       />

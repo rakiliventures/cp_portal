@@ -1,76 +1,94 @@
 /**
- * Shared event data for landing carousels and public /events page.
- * Replace with API/database later.
+ * Public-facing event data (landing carousels, public /events page) — sourced
+ * live from the database. Only events an admin has marked "Featured on landing
+ * page" (Event.featuredOnLanding) are shown here; everything else stays internal.
  */
+import { prisma } from "@/lib/prisma";
 
-export type UpcomingEvent = {
-  id: string;
-  title: string;
-  imageUrl: string;
-  date: string;
-  description?: string;
-  venue?: string;
+export type PublicEvent = {
+  id:          string;
+  title:       string;
+  imageUrl:    string | null;
+  date:        string; // display string, e.g. "18 July 2026"
+  eventDate:   string; // ISO yyyy-mm-dd, used for sort/upcoming-vs-past
+  description?: string | null;
+  venue?:      string | null;
+  theme?:      string | null;
+  workgroup?:  string | null;
+  startTime?:  string | null;
 };
 
-export type PastEvent = {
+export type PublicEventDetail = PublicEvent & { isPast: boolean };
+
+const SELECT = {
+  id:               true,
+  title:            true,
+  imageBannerUrl:   true,
+  date:             true,
+  descriptionAgenda: true,
+  venue:            true,
+  theme:            true,
+  startTime:        true,
+  workgroupAssigned: { select: { name: true } },
+} as const;
+
+type Row = {
   id: string;
   title: string;
-  imageUrl: string;
-  date: string;
-  summary?: string;
-  description?: string;
-  theme?: string;
-  workgroup?: string;
+  imageBannerUrl: string | null;
+  date: Date;
+  descriptionAgenda: string | null;
+  venue: string | null;
+  theme: string | null;
+  startTime: string | null;
+  workgroupAssigned: { name: string } | null;
 };
 
-export const UPCOMING_EVENTS: UpcomingEvent[] = [
-  {
-    id: "1",
-    title: "Lenten Recollection",
-    imageUrl: "/images/events/recollection.jpeg",
-    date: "14 March 2026",
-    description: "Join us for a time of reflection and prayer during the Lenten season.",
-    venue: "Komarock Shrine",
-  },
-];
+function eventDateIso(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
 
-export const PAST_EVENTS: PastEvent[] = [
-  {
-    id: "5",
-    title: "Dinner 2024",
-    imageUrl: "/images/events/dinner_2024.jpeg",
-    date: "6 Dec 2024",
-    theme: "Men-Black Tie, Ladies-Elegant Evening Gown",
-  },
-  {
-    id: "2",
-    title: "Dinner 2025",
-    imageUrl: "/images/events/dinner_2025.jpeg",
-    date: "5 Dec 2025",
-    theme: "Pre-Colonial Africa",
-    workgroup: "Team Building",
-  },
-  {
-    id: "3",
-    title: "Retreat 2025",
-    imageUrl: "/images/events/retreat_2025.jpeg",
-    date: "4th September 2025",
-  },
-  {
-    id: "4",
-    title: "Medical Camp 2025",
-    imageUrl: "/images/events/medical_camp_2025.jpeg",
-    date: "13th September 2025",
-  },
-];
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
-export type EventItem = (UpcomingEvent | PastEvent) & { isPast: boolean };
+function toPublicEvent(e: Row): PublicEvent {
+  return {
+    id:          e.id,
+    title:       e.title,
+    imageUrl:    e.imageBannerUrl,
+    date:        e.date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }),
+    eventDate:   eventDateIso(e.date),
+    description: e.descriptionAgenda,
+    venue:       e.venue,
+    theme:       e.theme,
+    workgroup:   e.workgroupAssigned?.name ?? null,
+    startTime:   e.startTime,
+  };
+}
 
-/** Find an event by id in either upcoming or past list. */
-export function getEventById(id: string): EventItem | null {
-  const upcoming = UPCOMING_EVENTS.find((e) => e.id === id);
-  if (upcoming) return { ...upcoming, isPast: false };
-  const past = PAST_EVENTS.find((e) => e.id === id);
-  if (past) return { ...past, isPast: true };
-  return null;
+/** All featured events, split into upcoming (soonest first) and past (most recent first). */
+export async function getFeaturedEvents(): Promise<{ upcoming: PublicEvent[]; past: PublicEvent[] }> {
+  const rows = await prisma.event.findMany({
+    where:  { featuredOnLanding: true },
+    select: SELECT,
+    orderBy: { date: "asc" },
+  });
+  const today  = todayIso();
+  const mapped = rows.map(toPublicEvent);
+  return {
+    upcoming: mapped.filter((e) => e.eventDate >= today),
+    past:     mapped.filter((e) => e.eventDate < today).sort((a, b) => b.eventDate.localeCompare(a.eventDate)),
+  };
+}
+
+/** A single featured event by id — non-featured events are not publicly reachable. */
+export async function getEventById(id: string): Promise<PublicEventDetail | null> {
+  const row = await prisma.event.findFirst({
+    where:  { id, featuredOnLanding: true },
+    select: SELECT,
+  });
+  if (!row) return null;
+  const event = toPublicEvent(row);
+  return { ...event, isPast: event.eventDate < todayIso() };
 }

@@ -11,6 +11,22 @@ export const CATEGORY_LABELS: Record<string, string> = {
   KACHAI:   "Kachai",
 };
 
+function AddToCalendarLink({ eventId, size }: { eventId: string; size: "sm" | "md" }) {
+  const dims = size === "sm" ? "h-9 w-9" : "h-8 w-8";
+  return (
+    <a
+      href={`/api/events/${eventId}/calendar`}
+      title="Add to calendar"
+      aria-label="Add to calendar"
+      className={`flex ${dims} items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-primary`}
+    >
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5M12 12v4.5M9.75 14.25h4.5" />
+      </svg>
+    </a>
+  );
+}
+
 type Props = {
   category: "CP_EVENT" | "MGM" | "KACHAI";
   label: string;
@@ -132,6 +148,7 @@ export async function EventsListContent({ category, label, basePath, searchParam
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                       </Link>
+                      {!isPast && <AddToCalendarLink eventId={ev.id} size="sm" />}
                       <EventActions eventId={ev.id} backHref={basePath} canEdit={canEdit} canDelete={canDelete} variant="row" />
                     </div>
                   </div>
@@ -191,6 +208,7 @@ export async function EventsListContent({ category, label, basePath, searchParam
                               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                           </Link>
+                          {!isPast && <AddToCalendarLink eventId={ev.id} size="md" />}
                           <EventActions
                             eventId={ev.id}
                             backHref={basePath}

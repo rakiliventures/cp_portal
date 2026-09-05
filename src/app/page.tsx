@@ -4,8 +4,11 @@ import { EventsCarousel } from "@/components/landing/EventsCarousel";
 import { PastEventsCarousel } from "@/components/landing/PastEventsCarousel";
 import { JoinUsForm } from "@/components/landing/JoinUsForm";
 import { WelcomeHero } from "@/components/landing/WelcomeHero";
+import { getFeaturedEvents } from "@/lib/events-data";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const { upcoming, past } = await getFeaturedEvents();
+
   return (
     <div className="landing-bg min-h-screen">
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md sm:px-6 sm:py-4">
@@ -50,7 +53,7 @@ export default function LandingPage() {
                     Past Events
                   </span>
                 </h2>
-                <PastEventsCarousel />
+                <PastEventsCarousel events={past} />
               </div>
               <div className="min-w-0">
                 <h3 id="upcoming-events-heading" className="mb-4 flex items-center gap-2 sm:mb-5">
@@ -59,7 +62,7 @@ export default function LandingPage() {
                     Upcoming Events
                   </span>
                 </h3>
-                <EventsCarousel />
+                <EventsCarousel events={upcoming} />
               </div>
             </div>
           </div>

@@ -9,9 +9,10 @@ type Props = {
   verified: boolean;
   canEdit: boolean;
   canDelete: boolean;
+  isOwnEntry: boolean; // true if the current user created this payment — they can't verify it
 };
 
-export function PaymentActions({ paymentId, verified, canEdit, canDelete }: Props) {
+export function PaymentActions({ paymentId, verified, canEdit, canDelete, isOwnEntry }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState<"verify" | "delete" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -51,21 +52,28 @@ export function PaymentActions({ paymentId, verified, canEdit, canDelete }: Prop
     <div className="flex items-center gap-1.5">
       <ErrorToast message={error} onClose={() => setError("")} />
       {canEdit && (
-        <button
-          type="button"
-          onClick={handleVerify}
-          disabled={busy !== null}
-          className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary transition hover:bg-primary/20 disabled:opacity-50"
-        >
-          {busy === "verify" ? (
-            <span className="h-3 w-3 animate-spin rounded-full border border-primary border-t-transparent" />
-          ) : (
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
-          )}
-          Verify
-        </button>
+        isOwnEntry ? (
+          <span className="inline-flex items-center rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-400"
+            title="You added this payment — another admin must verify it">
+            Awaiting another admin
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={handleVerify}
+            disabled={busy !== null}
+            className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary transition hover:bg-primary/20 disabled:opacity-50"
+          >
+            {busy === "verify" ? (
+              <span className="h-3 w-3 animate-spin rounded-full border border-primary border-t-transparent" />
+            ) : (
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            )}
+            Verify
+          </button>
+        )
       )}
       {canDelete && (
         <button

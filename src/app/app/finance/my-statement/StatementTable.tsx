@@ -1,16 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ErrorToast } from "@/components/ui/ErrorToast";
+import type { StatementRow } from "@/lib/statement";
 
-export type StatementRow = {
-  key:         string;
-  dateLabel:   string;
-  description: string;
-  source?:     string; // "System" or the admin's name, for invoice rows only
-  account:     "CP Kitty" | "Welfare";
-  debit:       number;
-  credit:      number;
-};
+export type { StatementRow };
 
 type Balance = { cpKitty: number; welfare: number };
 
@@ -19,6 +14,7 @@ type Props = {
   balances:    Balance;
   memberName:  string;
   generatedOn: string; // passed from server to avoid hydration mismatch
+  memberId?:   string; // required when any row has canVerify — used to build the verify URL
 };
 
 const PAGE_SIZE = 15;
@@ -27,11 +23,167 @@ function formatCurrency(n: number) {
   return new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", minimumFractionDigits: 0 }).format(Math.abs(n));
 }
 
-export function StatementTable({ rows, balances, memberName, generatedOn }: Props) {
+// ── Edit manual invoice modal ───────────────────────────────────────────────
+
+export function EditInvoiceModal({
+  row, memberId, onClose, onSuccess,
+}: {
+  row:       StatementRow;
+  memberId:  string;
+  onClose:   () => void;
+  onSuccess: () => void;
+}) {
+  const [amount, setAmount] = useState(String(Math.abs(row.rawAmountExpected ?? 0)));
+  const [type,   setType]   = useState<"CP_KITTY" | "WELFARE">(row.rawKitty ?? "CP_KITTY");
+  const [kind,   setKind]   = useState<"DEBIT" | "CREDIT">((row.rawAmountExpected ?? 0) < 0 ? "CREDIT" : "DEBIT");
+  const [notes,  setNotes]  = useState(row.rawNotes ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const num = Number(amount);
+    if (!num || num <= 0) { setError("Enter a valid amount."); return; }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/members/${memberId}/invoices/${row.rawId}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ amount: num, type, kind, notes: notes.trim() || undefined }),
+      });
+      if (res.ok) {
+        onSuccess();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Failed to save changes.");
+        setSaving(false);
+      }
+    } catch {
+      setError("Network error. Please try again.");
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+        <h3 className="text-base font-semibold text-slate-800">Edit manual entry</h3>
+
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Entry type</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setKind("DEBIT")}
+                className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
+                  kind === "DEBIT" ? "border-primary bg-primary/10 text-primary" : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                }`}>
+                Debit
+              </button>
+              <button type="button" onClick={() => setKind("CREDIT")}
+                className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
+                  kind === "CREDIT" ? "border-primary bg-primary/10 text-primary" : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                }`}>
+                Credit
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Amount (KES)</label>
+            <input type="number" min="1" step="1" value={amount}
+              onChange={(e) => setAmount(e.target.value)} required
+              className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Kitty</label>
+            <select value={type} onChange={(e) => setType(e.target.value as "CP_KITTY" | "WELFARE")}
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary">
+              <option value="CP_KITTY">CP Kitty</option>
+              <option value="WELFARE">Welfare Kitty</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Notes (optional)</label>
+            <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <ErrorToast message={error} onClose={() => setError("")} />
+          <div className="flex gap-3 pt-1">
+            <button type="submit" disabled={saving}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-light disabled:opacity-60">
+              {saving ? "Saving…" : "Save changes"}
+            </button>
+            <button type="button" onClick={onClose} disabled={saving}
+              className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Small icon action buttons ────────────────────────────────────────────────
+
+export function VerifyIconButton({ onClick, busy }: { onClick: () => void; busy: boolean }) {
+  return (
+    <button type="button" onClick={onClick} disabled={busy} title="Verify"
+      className="flex h-7 w-7 items-center justify-center rounded-lg text-primary transition hover:bg-primary/10 disabled:opacity-50">
+      {busy ? (
+        <span className="h-3.5 w-3.5 animate-spin rounded-full border border-primary border-t-transparent" />
+      ) : (
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+export function EditIconButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} title="Edit entry"
+      className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-primary">
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+      </svg>
+    </button>
+  );
+}
+
+export function StatementTable({ rows, balances, memberName, generatedOn, memberId }: Props) {
+  const router = useRouter();
   const [page, setPage] = useState(1);
+  const [verifyingKey, setVerifyingKey] = useState<string | null>(null);
+  const [verifyError,  setVerifyError]  = useState("");
+  const [editingRow,   setEditingRow]   = useState<StatementRow | null>(null);
+
+  async function handleVerify(row: StatementRow) {
+    if (!memberId) return;
+    setVerifyingKey(row.key);
+    setVerifyError("");
+    const url = row.rowType === "invoice"
+      ? `/api/members/${memberId}/invoices/${row.rawId}/verify`
+      : `/api/payments/${row.rawId}/verify`;
+    try {
+      const res = await fetch(url, { method: "PATCH" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setVerifyError(data.error ?? "Failed to verify.");
+        setVerifyingKey(null);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setVerifyError("Network error. Please try again.");
+      setVerifyingKey(null);
+    }
+  }
 
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const paginated  = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const hasActions = rows.some((r) => r.canEdit || r.canVerify);
 
   // Reset to page 1 if rows change
   useEffect(() => { setPage(1); }, [rows.length]);
@@ -41,6 +193,16 @@ export function StatementTable({ rows, balances, memberName, generatedOn }: Prop
 
   return (
     <>
+      {editingRow && memberId && (
+        <EditInvoiceModal
+          row={editingRow}
+          memberId={memberId}
+          onClose={() => setEditingRow(null)}
+          onSuccess={() => { setEditingRow(null); router.refresh(); }}
+        />
+      )}
+      <ErrorToast message={verifyError} onClose={() => setVerifyError("")} />
+
       {/* ── Balance summary ────────────────────────────────────── */}
       <div className="no-print mb-6 flex flex-wrap gap-3">
         <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 ${cpCompliant ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
@@ -123,9 +285,13 @@ export function StatementTable({ rows, balances, memberName, generatedOn }: Prop
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-700 leading-snug">{row.description}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {row.dateLabel}{row.source && <> · {row.source}</>}
-                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">{row.dateLabel}</p>
+                  {row.source && (
+                    <p className="mt-0.5 text-[11px] text-slate-400">
+                      Created by: {row.source}
+                      {row.verifiedLabel && <span className={row.verified ? "text-green-600" : "text-amber-600"}> · {row.verifiedLabel}</span>}
+                    </p>
+                  )}
                 </div>
                 <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.account === "Welfare" ? "bg-blue-50 text-blue-700" : "bg-primary/10 text-primary"}`}>
                   {row.account}
@@ -146,6 +312,12 @@ export function StatementTable({ rows, balances, memberName, generatedOn }: Prop
                   </p>
                 </div>
               </div>
+              {(row.canVerify || row.canEdit) && (
+                <div className="flex items-center justify-end gap-1 border-t border-slate-100 pt-2">
+                  {row.canEdit && <EditIconButton onClick={() => setEditingRow(row)} />}
+                  {row.canVerify && <VerifyIconButton onClick={() => handleVerify(row)} busy={verifyingKey === row.key} />}
+                </div>
+              )}
             </div>
           ))
         )}
@@ -162,20 +334,26 @@ export function StatementTable({ rows, balances, memberName, generatedOn }: Prop
                 <th className="px-4 py-3 text-left font-semibold text-slate-700">Account</th>
                 <th className="px-4 py-3 text-right font-semibold text-slate-700">Invoiced</th>
                 <th className="px-4 py-3 text-right font-semibold text-slate-700">Paid</th>
+                {hasActions && <th className="no-print px-4 py-3 text-left font-semibold text-slate-700">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-slate-400">No records yet.</td>
+                  <td colSpan={hasActions ? 6 : 5} className="px-4 py-10 text-center text-slate-400">No records yet.</td>
                 </tr>
               ) : (
                 paginated.map((row) => (
                   <tr key={row.key} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 print:hover:bg-transparent">
                     <td className="px-4 py-3 tabular-nums text-slate-500 whitespace-nowrap">{row.dateLabel}</td>
                     <td className="px-4 py-3 text-slate-700">
-                      {row.description}
-                      {row.source && <span className="ml-1.5 text-xs text-slate-400">· {row.source}</span>}
+                      <p>{row.description}</p>
+                      {row.source && (
+                        <p className="mt-0.5 text-[11px] text-slate-400">
+                          Created by: {row.source}
+                          {row.verifiedLabel && <span className={row.verified ? "text-green-600" : "text-amber-600"}> · {row.verifiedLabel}</span>}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.account === "Welfare" ? "bg-blue-50 text-blue-700" : "bg-primary/10 text-primary"}`}>
@@ -188,6 +366,14 @@ export function StatementTable({ rows, balances, memberName, generatedOn }: Prop
                     <td className="px-4 py-3 text-right tabular-nums font-medium text-green-700">
                       {row.credit > 0 ? formatCurrency(row.credit) : <span className="text-slate-300 font-normal">—</span>}
                     </td>
+                    {hasActions && (
+                      <td className="no-print px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {row.canEdit && <EditIconButton onClick={() => setEditingRow(row)} />}
+                          {row.canVerify && <VerifyIconButton onClick={() => handleVerify(row)} busy={verifyingKey === row.key} />}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

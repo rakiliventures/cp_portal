@@ -3,16 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { UpcomingEvent } from "@/lib/events-data";
-import { UPCOMING_EVENTS } from "@/lib/events-data";
+import type { PublicEvent } from "@/lib/events-data";
 
 const SWIPE_THRESHOLD = 50;
 
-export function EventsCarousel() {
+export function EventsCarousel({ events }: { events: PublicEvent[] }) {
   const [index, setIndex] = useState(0);
   const touchStart = useRef<number | null>(null);
   const touchEnd = useRef<number | null>(null);
-  const events = UPCOMING_EVENTS;
   const count = events.length;
 
   const goTo = useCallback(
@@ -77,14 +75,17 @@ export function EventsCarousel() {
           >
             <article className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-lg shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/20">
               <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 sm:aspect-[2/1]">
-                <Image
-                  src={event.imageUrl}
-                  alt={event.title}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 800px"
-                  priority={event.id === events[0].id}
-                />
+                {event.imageUrl && (
+                  <Image
+                    src={event.imageUrl}
+                    alt={event.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 800px"
+                    priority={event.id === events[0].id}
+                    unoptimized={event.imageUrl.startsWith("http")}
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden />
               </div>
               <div className="flex flex-col gap-4 bg-slate-50 p-4 sm:p-5">

@@ -21,14 +21,15 @@ export type SerializedPayment = {
 };
 
 type Props = {
-  payments: SerializedPayment[];
-  canEdit: boolean;
-  canDelete: boolean;
+  payments:      SerializedPayment[];
+  canEdit:       boolean;
+  canDelete:     boolean;
+  currentUserId: string;
 };
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
-export function PaymentsTable({ payments, canEdit, canDelete }: Props) {
+export function PaymentsTable({ payments, canEdit, canDelete, currentUserId }: Props) {
   const [query, setQuery]       = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo]     = useState("");
@@ -253,6 +254,13 @@ export function PaymentsTable({ payments, canEdit, canDelete }: Props) {
                     {p.member.name ?? p.member.email ?? "—"}
                   </span>
                 </div>
+                {/* Row 3b: created by / verified by */}
+                <p className="mt-0.5 text-[11px] text-slate-400">
+                  Created by: {p.createdById === null ? "Imported" : (p.createdBy?.name ?? "Admin")}
+                  <span className={p.verified ? "text-green-600" : "text-amber-600"}>
+                    {" "}· Verified by: {p.verified ? (p.verifiedBy?.name ?? "Admin") : "Pending"}
+                  </span>
+                </p>
                 {/* Row 4: verification status + actions */}
                 <div className="no-print mt-2 flex items-center justify-between">
                   {p.verified ? (
@@ -272,6 +280,7 @@ export function PaymentsTable({ payments, canEdit, canDelete }: Props) {
                     verified={p.verified}
                     canEdit={canEdit}
                     canDelete={canDelete}
+                    isOwnEntry={p.createdById === currentUserId}
                   />
                 </div>
               </div>
@@ -381,6 +390,7 @@ export function PaymentsTable({ payments, canEdit, canDelete }: Props) {
                           verified={p.verified}
                           canEdit={canEdit}
                           canDelete={canDelete}
+                          isOwnEntry={p.createdById === currentUserId}
                         />
                       </td>
                     </tr>

@@ -10,8 +10,9 @@ export default async function FinancePaymentsPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user) redirect("/login?callbackUrl=/app/finance/payments");
 
-  const isSuperAdmin = !!(session.user as { isSuperAdmin?: boolean }).isSuperAdmin;
-  const modules = (session.user as { modules?: ModuleAssignment[] }).modules;
+  const isSuperAdmin  = !!(session.user as { isSuperAdmin?: boolean }).isSuperAdmin;
+  const modules       = (session.user as { modules?: ModuleAssignment[] }).modules;
+  const currentUserId = (session.user as { id?: string }).id ?? "";
 
   if (!canAccessModule(modules, isSuperAdmin, MODULE_CODES.FINANCE, "view")) {
     redirect("/app/dashboard");
@@ -75,7 +76,7 @@ export default async function FinancePaymentsPage() {
         )}
       </div>
 
-      <PaymentsTable payments={payments} canEdit={canEdit} canDelete={canDelete} />
+      <PaymentsTable payments={payments} canEdit={canEdit} canDelete={canDelete} currentUserId={currentUserId} />
     </div>
   );
 }

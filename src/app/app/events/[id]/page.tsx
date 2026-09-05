@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
@@ -91,36 +90,21 @@ export default async function AppEventDetailPage({ params }: PageProps) {
         />
       </div>
 
-      <article className="card overflow-hidden p-0">
-        {event.imageBannerUrl && (
-          <div className="relative w-full bg-slate-200" style={{ aspectRatio: "16/7" }}>
-            <Image
-              src={event.imageBannerUrl}
-              alt={event.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 800px"
-              priority
-              unoptimized={event.imageBannerUrl.startsWith("http")}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4 text-white sm:p-6">
-              <div className="flex flex-wrap gap-2">
-                <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
-                  {isPast ? "Past event" : "Upcoming"}
-                </span>
-                <span className="rounded-full bg-primary/80 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
-                  {categoryLabel}
-                </span>
-              </div>
-              <time className="mt-2 block text-sm font-medium text-white/90">{dateStr}</time>
-              <h1 className="mt-1 text-xl font-bold text-white sm:text-3xl leading-tight">{event.title}</h1>
+      <article className="card">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
+          {event.imageBannerUrl && (
+            // Small poster card, uncropped and with no text overlaid on it — every
+            // detail on the poster (dates, times, fine print) needs to stay legible.
+            <div className="mx-auto w-full max-w-[220px] shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100 sm:mx-0">
+              <img
+                src={event.imageBannerUrl}
+                alt={event.title}
+                className="block w-full h-auto"
+              />
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="p-5 sm:p-8">
-          {!event.imageBannerUrl && (
+          <div className="min-w-0 flex-1">
             <div className="mb-4">
               <div className="flex flex-wrap gap-2">
                 <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
@@ -133,69 +117,81 @@ export default async function AppEventDetailPage({ params }: PageProps) {
               <time className="mt-2 block text-sm font-medium text-slate-600">{dateStr}</time>
               <h1 className="page-heading mt-1 mb-0">{event.title}</h1>
             </div>
-          )}
 
-          <dl className="mt-3 space-y-1 text-sm">
-            {event.theme && (
-              <div className="flex gap-2">
-                <dt className="w-28 shrink-0 font-medium text-slate-500">Theme</dt>
-                <dd className="text-slate-700">{event.theme}</dd>
-              </div>
-            )}
-            {event.workgroupAssigned && (
-              <div className="flex gap-2">
-                <dt className="w-28 shrink-0 font-medium text-slate-500">Workgroup</dt>
-                <dd className="text-slate-700">{event.workgroupAssigned.name}</dd>
-              </div>
-            )}
-            {event.venue && (
-              <div className="flex gap-2">
-                <dt className="w-28 shrink-0 font-medium text-slate-500">Venue</dt>
-                <dd className="text-slate-700">{event.venue}</dd>
-              </div>
-            )}
-            {event.startTime && (
-              <div className="flex gap-2">
-                <dt className="w-28 shrink-0 font-medium text-slate-500">Start time</dt>
-                <dd className="text-slate-700">{event.startTime}</dd>
-              </div>
-            )}
-            {event.contactPerson && (
-              <div className="flex gap-2">
-                <dt className="w-28 shrink-0 font-medium text-slate-500">Contact</dt>
-                <dd className="text-slate-700">
-                  {event.contactPerson.name}
-                  {event.contactPerson.phone && (
-                    <span className="text-slate-500"> ({event.contactPerson.phone})</span>
-                  )}
-                </dd>
-              </div>
-            )}
-            {event.postEventReportUrl && (
-              <div className="flex gap-2">
-                <dt className="w-28 shrink-0 font-medium text-slate-500">Post-Event Report</dt>
-                <dd>
-                  <a
-                    href={event.postEventReportUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-                  >
-                    Open report
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                    </svg>
-                  </a>
-                </dd>
-              </div>
-            )}
-          </dl>
+            <dl className="mt-3 space-y-1 text-sm">
+              {event.theme && (
+                <div className="flex gap-2">
+                  <dt className="w-28 shrink-0 font-medium text-slate-500">Theme</dt>
+                  <dd className="text-slate-700">{event.theme}</dd>
+                </div>
+              )}
+              {event.workgroupAssigned && (
+                <div className="flex gap-2">
+                  <dt className="w-28 shrink-0 font-medium text-slate-500">Workgroup</dt>
+                  <dd className="text-slate-700">{event.workgroupAssigned.name}</dd>
+                </div>
+              )}
+              {event.venue && (
+                <div className="flex gap-2">
+                  <dt className="w-28 shrink-0 font-medium text-slate-500">Venue</dt>
+                  <dd className="text-slate-700">{event.venue}</dd>
+                </div>
+              )}
+              {event.startTime && (
+                <div className="flex gap-2">
+                  <dt className="w-28 shrink-0 font-medium text-slate-500">Start time</dt>
+                  <dd className="text-slate-700">{event.startTime}</dd>
+                </div>
+              )}
+              {event.contactPerson && (
+                <div className="flex gap-2">
+                  <dt className="w-28 shrink-0 font-medium text-slate-500">Contact</dt>
+                  <dd className="text-slate-700">
+                    {event.contactPerson.name}
+                    {event.contactPerson.phone && (
+                      <span className="text-slate-500"> ({event.contactPerson.phone})</span>
+                    )}
+                  </dd>
+                </div>
+              )}
+              {event.postEventReportUrl && (
+                <div className="flex gap-2">
+                  <dt className="w-28 shrink-0 font-medium text-slate-500">Post-Event Report</dt>
+                  <dd>
+                    <a
+                      href={event.postEventReportUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                    >
+                      Open report
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                    </a>
+                  </dd>
+                </div>
+              )}
+            </dl>
 
-          {event.descriptionAgenda && (
-            <div className="mt-5 border-t border-slate-100 pt-5 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
-              {event.descriptionAgenda}
-            </div>
-          )}
+            {event.descriptionAgenda && (
+              <div className="mt-5 border-t border-slate-100 pt-5 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
+                {event.descriptionAgenda}
+              </div>
+            )}
+
+            {!isPast && (
+              <a
+                href={`/api/events/${event.id}/calendar`}
+                className="mt-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5M12 12v4.5M9.75 14.25h4.5" />
+                </svg>
+                Add to Calendar
+              </a>
+            )}
+          </div>
         </div>
       </article>
 
